@@ -1,0 +1,15 @@
+{
+  "icons": "emoji",
+  "max_width": 90,
+  "line1": ["model", "session", "today", "month", "where"],
+  "line2": ["context", "five_hour", "seven_day", "cache"],
+  "monthly_target_hours": null,
+  "bar_width": 6,
+  "context_hint_at": 75,
+  "context_hint": "/compact?",
+  "week_reset_above": 70,
+  "idle_cap_minutes": 10,
+  "git": true,
+  "colors": { "ok": 71, "warn": 208, "bad": 196, "dim": 245, "add": 71, "del": 196 },
+  "thresholds": { "warn": 60, "bad": 85 }
+}
