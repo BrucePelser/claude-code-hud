@@ -126,8 +126,8 @@ def main():
         font_path = install_font()
         set_icons_custom(config_target)
         print("Font:      %s" % font_path)
-        print("Next: restart your terminal, then add 'Claude HUD Icons' to its font list if icons show as boxes.")
-        print("      Windows Terminal: \"font\": {\"face\": \"Cascadia Mono, Claude HUD Icons\"}")
+        print("Next: add 'Claude HUD Icons' to your terminal's font list as a fallback, or the icons show as boxes.")
+        print("      Windows Terminal (profiles > defaults): \"font\": {\"face\": \"Cascadia Mono, Claude HUD Icons\"}")
         print("      VS Code: \"terminal.integrated.fontFamily\": \"'Cascadia Mono', 'Claude HUD Icons'\"")
     if args.backfill:
         subprocess.run([sys.executable, str(dest), "--backfill"],

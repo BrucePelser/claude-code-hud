@@ -55,9 +55,9 @@ Three icon sets, chosen with `"icons"`:
 python install.py --font
 ```
 
-That copies the font into your user fonts (no admin rights), sets `"icons": "custom"` in your config, and prints the terminal step. Restart your terminal afterwards. If the icons show as empty boxes, add the font to your terminal's font list as a fallback:
+That copies the font into your user fonts (no admin rights), sets `"icons": "custom"` in your config, and prints the terminal step. Installing the font is not always enough: most terminals only draw the icons once the font is in their font list as a fallback.
 
-- **Windows Terminal:** in `settings.json`, `"font": { "face": "Cascadia Mono, Claude HUD Icons" }` (a comma-separated list is a fallback list)
+- **Windows Terminal:** needs this. In `settings.json`, under `profiles` > `defaults`, add `"font": { "face": "Cascadia Mono, Claude HUD Icons" }` (a comma-separated list is a fallback list). Windows Terminal reloads the file when you save it.
 - **VS Code:** `"terminal.integrated.fontFamily": "'Cascadia Mono', 'Claude HUD Icons'"`
 - **Other terminals:** use whatever your terminal calls a fallback or symbols font. The font only contains the 14 icons, so it never replaces your main font.
 
@@ -163,7 +163,7 @@ Nothing leaves your machine. The HUD makes no network calls. It reads the JSON C
 - **Line wraps in a narrow pane.** Lower `max_width`, or remove segments from `line1`.
 - **A segment is missing.** It did not fit in `max_width`. Raise it, or move that segment to another row.
 - **No brain segment.** Set `brain_path` and use a file in it. Only the last 4 MB of transcript is scanned, so a brain file touched long ago drops off.
-- **Icons show as empty boxes.** The terminal is not using the icon font. See "Install the icon font", or set `"icons": "emoji"`.
+- **Icons show as empty boxes, or a diamond with a question mark.** The terminal does not have the icon font in its font list. See "Install the icon font", or set `"icons": "emoji"`.
 - **Emoji look misaligned.** Set `"icons": "plain"` or install the icon font.
 - **No `cache` segment.** It needs Claude Code 2.1.251 or newer.
 - **`today` and `month` start at zero.** Run `python hud.py --backfill`, or reinstall with `--backfill`.
