@@ -159,7 +159,7 @@ class RenderTests(unittest.TestCase):
         self.assertIn("Sonnet 5.5", out)
 
     def test_month_target_is_shown(self):
-        out = hud.render(hud.demo_data(), make_cfg(monthly_target_hours=160), hud.DEMO_STATE)
+        out = hud.render(hud.demo_data(), make_cfg(monthly_target_hours=160, max_width=120), hud.DEMO_STATE)
         self.assertIn("/160h", out)
 
     def test_cold_cache_and_context_hint(self):
@@ -170,9 +170,103 @@ class RenderTests(unittest.TestCase):
         self.assertIn("cache cold", out)
         self.assertIn("/compact?", out)
 
+    def test_elapsed_shows_open_time_and_hides_without_data(self):
+        out = hud.render(hud.demo_data(), make_cfg(), hud.DEMO_STATE)
+        self.assertIn("open 2h10m", out)
+        data = hud.demo_data()
+        del data["cost"]["total_duration_ms"]
+        self.assertNotIn("open", hud.render(data, make_cfg(), hud.DEMO_STATE))
+
     def test_unknown_segment_names_are_ignored(self):
         out = hud.render(hud.demo_data(), make_cfg(line1=["nope", "model"], line2=[]), hud.DEMO_STATE)
         self.assertIn("Sonnet 5.5", out)
+
+
+def tool_use_line(name, **tool_input):
+    block = {"type": "tool_use", "id": "t1", "name": name, "input": tool_input}
+    return json.dumps({"type": "assistant", "message": {"content": [block]}})
+
+
+class BrainTests(unittest.TestCase):
+    ROOT = "C:/Notes/brain"
+
+    def write_lines(self, tmp, lines):
+        path = os.path.join(tmp, "s.jsonl")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+        return path
+
+    def test_label_short_and_long(self):
+        self.assertEqual(hud.brain_label("sessions/hud-2026.md", 44), "sessions/hud-2026")
+        self.assertEqual(hud.brain_label("plans/so/some-project/plan.md", 40), "plans/so/some-project/plan")
+        long =hud.brain_label("plans/so/a-very-long-project-name-here/plan.md", 30)
+        self.assertTrue(long.startswith("plans/\u2026/"))
+        self.assertLessEqual(len(long), 30)
+        self.assertLessEqual(len(hud.brain_label("x/" + "y" * 90 + ".md", 30)), 30)
+
+    def test_touches_reads_tool_use_only_in_order_with_dedupe(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result_line = json.dumps({"type": "user", "message": {"content": [
+                {"type": "tool_result", "tool_use_id": "t1", "content": "C:\\Notes\\brain\\ignored.md"}]}})
+            path = self.write_lines(tmp, [
+                tool_use_line("Read", file_path="C:\\Notes\\brain\\sessions\\a.md"),
+                tool_use_line("Bash", command='cat /c/Notes/brain/plans/x/plan.md:5 | head'),
+                result_line,
+                tool_use_line("Edit", file_path="c:/notes/BRAIN/sessions/a.md", old_string="x"),
+                tool_use_line("Read", file_path="C:\\Elsewhere\\other.md"),
+            ])
+            files = hud.brain_touches(path, self.ROOT, 1 << 20)
+            self.assertEqual(files, ["plans/x/plan.md", "sessions/a.md"])
+
+    def test_window_drops_old_activity(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old = tool_use_line("Read", file_path="C:/Notes/brain/old.md")
+            filler = json.dumps({"type": "user", "pad": "x" * 5000})
+            new = tool_use_line("Read", file_path="C:/Notes/brain/new.md")
+            path = self.write_lines(tmp, [old, filler, new])
+            self.assertEqual(hud.brain_touches(path, self.ROOT, 1000), ["new.md"])
+
+    def test_relative_to_root(self):
+        self.assertEqual(hud.relative_to_root("C:\\Notes\\brain\\plans\\x", self.ROOT), "plans/x")
+        self.assertIsNone(hud.relative_to_root("C:/Notes/brain", self.ROOT))
+        self.assertIsNone(hud.relative_to_root("C:/Other", self.ROOT))
+
+    def test_build_state_finds_brain_and_caches(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self.write_lines(tmp, [tool_use_line("Read", file_path=self.ROOT + "/skills/style.md")])
+            cfg = make_cfg(brain_path=self.ROOT)
+            st = hud.build_state({"transcript_path": path}, cfg, tmp)
+            self.assertEqual(st["brain"]["files"], ["skills/style.md"])
+            self.assertTrue(os.path.exists(os.path.join(tmp, "hud-state", "brain.json")))
+            again = hud.build_state({"transcript_path": path}, cfg, tmp)
+            self.assertEqual(again["brain"]["files"], ["skills/style.md"])
+
+    def test_no_brain_without_brain_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self.write_lines(tmp, [tool_use_line("Read", file_path=self.ROOT + "/skills/style.md")])
+            st = hud.build_state({"transcript_path": path}, make_cfg(), tmp)
+            self.assertIsNone(st["brain"])
+
+    def test_cwd_inside_brain_is_a_fallback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = make_cfg(brain_path=tmp)
+            sub = os.path.join(tmp, "plans")
+            os.makedirs(sub)
+            st = hud.build_state({"workspace": {"current_dir": sub}}, cfg, tmp)
+            self.assertEqual(st["brain"]["files"], ["plans"])
+
+    def test_brain_goes_on_line_three_and_counts_extras(self):
+        state = dict(hud.DEMO_STATE, brain={"files": ["plans/a.md", "sessions/hud-2026.md"]})
+        out = hud.render(hud.demo_data(), make_cfg(), state)
+        lines = out.split("\n")
+        self.assertEqual(len(lines), 3)
+        self.assertIn("sessions/hud-2026", lines[2])
+        self.assertIn("+1", lines[2])
+
+    def test_plain_icons_label_the_brain_segment(self):
+        state = dict(hud.DEMO_STATE, brain={"files": ["a/b.md"]})
+        out = hud.render(hud.demo_data(), make_cfg(icons="plain"), state)
+        self.assertIn("brain a/b", out)
 
 
 class StateTests(unittest.TestCase):

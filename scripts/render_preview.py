@@ -89,11 +89,15 @@ def frames():
     pressure_data["rate_limits"]["seven_day"]["used_percentage"] = 88
     pressure_data["prompt_cache"] = {"warm": False, "caching_observed": True, "expires_at": None}
     pressure_state = dict(hud.DEMO_STATE, git={"branch": "feature/login", "dirty": False, "ahead": 0, "behind": 2})
-    target = hud._merge(base, {"monthly_target_hours": 160, "max_width": 100})
+    target = hud._merge(base, {"monthly_target_hours": 160, "max_width": 120})
+    brain_state = dict(hud.DEMO_STATE, brain={"files": [
+        "plans/launch/plan.md", "reference/style-guide.md", "sessions/hud-notes-2026-10-07.md"]})
     return [
         ("Default", hud.render(hud.demo_data(), base, hud.DEMO_STATE)),
-        ("Under pressure, with a 160h monthly target (max_width 100)",
+        ("Under pressure, with a 160h monthly target (max_width 120)",
          hud.render(pressure_data, target, pressure_state)),
+        ('With "brain_path" set: line 3 shows the newest brain file and how many others',
+         hud.render(hud.demo_data(), base, brain_state)),
         ('"icons": "plain"', hud.render(hud.demo_data(), plain, hud.DEMO_STATE)),
     ]
 

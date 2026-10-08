@@ -1,10 +1,10 @@
 # claude-code-hud
 
-A two-line status line for [Claude Code](https://code.claude.com). One Python file, standard library only, no network calls.
+A status line for [Claude Code](https://code.claude.com): two lines by default, a third when you point it at a notes folder. One Python file, standard library only, no network calls.
 
-![Three renderings of the HUD: default, under pressure, and plain icons](assets/preview.svg)
+![Four renderings of the HUD: default, under pressure, with a brain folder, and plain icons](assets/preview.svg)
 
-Line 1 is about you: model, how long you have actually worked, where you are in git. Line 2 is about limits: context window, 5-hour and 7-day usage, prompt cache timer.
+Line 1 is about you: model, how long you have worked and how long the session has been open, where you are in git. Line 2 is about limits: context window, 5-hour and 7-day usage, prompt cache timer. Line 3 is optional: which file in your notes folder (a "brain", wiki or docs vault) the session is working in.
 
 ## What it shows
 
@@ -12,12 +12,14 @@ Line 1 is about you: model, how long you have actually worked, where you are in 
 | --- | --- |
 | `model` | Model name, effort level (`high`, `xhi`, ...), `fast` when fast mode is on |
 | `session` | Active time in this session |
+| `elapsed` | How long the session has been open, e.g. `open 2h10m` |
 | `today` | Active time across all sessions today |
 | `month` | Active time this month, with `/160h` style target if you set one |
 | `cost` | Session cost estimate in USD (list price, may differ from your bill) |
 | `lines` | Lines added and removed this session |
 | `name` | Session name, if you set one with `/rename` |
 | `where` | Folder, git branch, `*` if dirty, `↑2` ahead, `↓1` behind |
+| `brain` | Newest file the session touched in your notes folder, plus `+N` for other recent files. Needs `brain_path` |
 | `context` | Context window bar. Shows a hint once you pass 75% |
 | `five_hour` | 5-hour usage bar and time until reset |
 | `seven_day` | 7-day usage bar. Reset time appears once you pass 70% |
@@ -25,7 +27,7 @@ Line 1 is about you: model, how long you have actually worked, where you are in 
 
 Bars turn orange at 60% and red at 85%. A segment hides itself when Claude Code does not send its data. Rate limits only exist for Pro and Max plans, so API users will not see those two bars.
 
-Default layout: `model session today month where` on line 1, `context five_hour seven_day cache` on line 2. `cost`, `lines` and `name` are off until you add them.
+Default layout: `model session elapsed where today month` on line 1, `context five_hour seven_day cache` on line 2, `brain` on line 3. Line 3 stays hidden until you set `brain_path`. `cost`, `lines` and `name` are off until you add them.
 
 ## Install
 
@@ -72,8 +74,11 @@ Edit `~/.claude/hud.config.json`. Every key is optional. Set `CLAUDE_HUD_CONFIG`
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `icons` | `"emoji"` | `"emoji"` or `"plain"` (text labels, no emoji) |
-| `line1`, `line2` | see above | Segment names in order. Put what matters most first |
-| `max_width` | `90` | A segment that would push a line past this width is skipped |
+| `line1`, `line2`, `line3` | see above | Segment names in order. Put what matters most first |
+| `max_width` | `100` | A segment that would push a line past this width is skipped. Later segments go first, so raise it if `month` disappears |
+| `brain_path` | `null` | Folder to track, e.g. `"~/brain"`. Turns on the `brain` segment |
+| `brain_max_len` | `44` | Longest brain label. Long paths keep the top folder and the file name |
+| `brain_window_kb` | `4096` | How much recent transcript to scan for brain files |
 | `monthly_target_hours` | `null` | Adds `/160h` to `month` and colours it by progress |
 | `bar_width` | `6` | Cells per bar |
 | `context_hint_at` | `75` | Percent where the context hint appears |
@@ -100,18 +105,24 @@ Example, a compact HUD with cost and no emoji:
 
 **Active time** is the sum of the gaps between message timestamps in the session transcript, with each gap capped at 10 minutes. Leave a session open overnight and it still reads a few minutes, not 12 hours. It is an estimate of time spent working, not a billing record.
 
+**Open time** is the session's own wall-clock figure from Claude Code. It leaves out the time a session was closed, so a resumed session does not read as days. Active time is usually the smaller number: open time includes the minutes you spent away.
+
+**Brain** looks at the tool calls Claude made in the last 4 MB of the transcript (reads, edits, writes, shell commands) and keeps any path under `brain_path`. The newest one is shown. Search results and file listings do not count, only paths Claude actually used. If no file has been touched yet but the session started inside `brain_path`, it shows that folder instead.
+
 **Today and month** come from per-day totals the HUD keeps in `<config dir>/hud-state/active.json`, updated each time it runs. Each Claude config directory gets its own file, so two accounts stay separate. Entries older than 70 days are dropped. Run `python hud.py --backfill` any time to rescan this month's transcripts.
 
 **Cache** is the prompt cache timer from Claude Code. After it hits zero, your next prompt re-reads the whole context at full price. That is the moment to know about before you walk away from a long session.
 
 ## Privacy
 
-Nothing leaves your machine. The HUD makes no network calls. It reads the JSON Claude Code gives it, your local session transcripts (timestamps only, message text is never stored), and runs `git status` in your working folder. It writes two small files to `<config dir>/hud-state/`: the per-day time totals and a 5-second git cache. Delete that folder to reset.
+Nothing leaves your machine. The HUD makes no network calls. It reads the JSON Claude Code gives it, your local session transcripts (timestamps only, message text is never stored), and runs `git status` in your working folder. It writes small files to `<config dir>/hud-state/`: the per-day time totals, a 5-second git cache, and (only with `brain_path` set) a cache of the brain file paths found in your transcripts. Delete that folder to reset.
 
 ## Troubleshooting
 
 - **Nothing shows.** Run `python hud.py --demo`. If that works, check the `command` path in `settings.json`. Set `CLAUDE_HUD_DEBUG=1` in the environment to see errors instead of a bare model name.
 - **Line wraps in a narrow pane.** Lower `max_width`, or remove segments from `line1`.
+- **A segment is missing.** It did not fit in `max_width`. Raise it, or move that segment to `line3`.
+- **No brain line.** Set `brain_path` and use a file in it. Only the last 4 MB of transcript is scanned, so a brain file touched long ago drops off.
 - **Emoji look misaligned.** Set `"icons": "plain"`.
 - **No `cache` segment.** It needs Claude Code 2.1.251 or newer.
 - **`today` and `month` start at zero.** Run `python hud.py --backfill`, or reinstall with `--backfill`.

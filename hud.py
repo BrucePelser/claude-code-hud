@@ -17,13 +17,17 @@ import time
 import unicodedata
 from datetime import datetime
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 DEFAULTS = {
     "icons": "emoji",  # "emoji" or "plain"
-    "max_width": 90,  # a segment that would push a line past this is skipped
-    "line1": ["model", "session", "today", "month", "where"],
+    "max_width": 100,  # a segment that would push a line past this is skipped
+    "line1": ["model", "session", "elapsed", "where", "today", "month"],
     "line2": ["context", "five_hour", "seven_day", "cache"],
+    "line3": ["brain"],  # empty, and hidden, until brain_path is set and used
+    "brain_path": None,  # a folder of notes or docs, e.g. "~/brain"
+    "brain_max_len": 44,
+    "brain_window_kb": 4096,  # how much recent transcript to scan for brain files
     "monthly_target_hours": None,
     "bar_width": 6,
     "context_hint_at": 75,  # show the hint once context use reaches this percent
@@ -42,6 +46,7 @@ ICONS = {
     "month": "\U0001f4c6 ",
     "cost": "\U0001f4b0 ",
     "where": "\U0001f4c1 ",
+    "brain": "\U0001f4c2 ",
     "context": "\U0001f50b ",
     "reset": "\u23f3",
 }
@@ -251,6 +256,117 @@ def git_info(cwd, state_dir, ttl=5):
     return info
 
 
+# ---------------------------------------------------------------- brain
+
+TOOL_USE_RE = re.compile(rb'"type"\s*:\s*"tool_use"')
+
+
+def root_variants(root):
+    norm = root.replace("\\", "/").rstrip("/")
+    out = [norm]
+    m = re.match(r"^([A-Za-z]):(/.*)?$", norm)
+    if m:  # Git Bash spells C:/notes as /c/notes
+        out.append("/%s%s" % (m.group(1).lower(), m.group(2) or ""))
+    return out
+
+
+def relative_to_root(path, root):
+    p = path.replace("\\", "/").rstrip("/")
+    for v in root_variants(root):
+        if p.lower().startswith(v.lower() + "/"):
+            return p[len(v) + 1:]
+    return None
+
+
+def _strings(node):
+    if isinstance(node, str):
+        yield node
+    elif isinstance(node, dict):
+        for v in node.values():
+            yield from _strings(v)
+    elif isinstance(node, list):
+        for v in node:
+            yield from _strings(v)
+
+
+def brain_touches(transcript, root, window_bytes):
+    """Paths under root that recent tool calls mentioned, relative to root, oldest first.
+
+    Only tool_use blocks count. Tool results are skipped on purpose: a search that lists
+    ten brain files would otherwise look like the session was working in all ten.
+    """
+    variants = root_variants(root)
+    pattern = re.compile(
+        r"(?:%s)/([^\s\"'`<>|*?()\[\]{}]+)" % "|".join(re.escape(v) for v in variants), re.I)
+    needles = [v.lower().encode("utf-8") for v in variants]
+    size = os.path.getsize(transcript)
+    with open(transcript, "rb") as f:
+        f.seek(max(0, size - window_bytes))
+        lines = f.read().split(b"\n")
+    if size > window_bytes:
+        lines = lines[1:]  # the first line was cut in half
+    found = []
+    for line in lines:
+        if not TOOL_USE_RE.search(line):
+            continue
+        # JSON doubles every backslash, so fold them before the cheap substring test
+        flat = line.lower().replace(b"\\\\", b"/")
+        if not any(n in flat for n in needles):
+            continue
+        try:
+            blocks = json.loads(line)["message"]["content"]
+        except Exception:
+            continue
+        for block in blocks if isinstance(blocks, list) else []:
+            if not (isinstance(block, dict) and block.get("type") == "tool_use"):
+                continue
+            for text in _strings(block.get("input")):
+                for m in pattern.finditer(text.replace("\\", "/")):
+                    rel = re.sub(r":\d+$", "", m.group(1).rstrip(".,;:"))
+                    if rel:
+                        found.append(rel)
+    seen, newest_first = set(), []
+    for rel in reversed(found):
+        if rel not in seen:
+            seen.add(rel)
+            newest_first.append(rel)
+    return newest_first[::-1]
+
+
+def brain_files(transcript, cfg, state_dir):
+    """brain_touches, cached until the transcript grows."""
+    root = os.path.expanduser(cfg["brain_path"])
+    stat = os.stat(transcript)
+    sig = [stat.st_size, stat.st_mtime_ns, root, cfg["brain_window_kb"]]
+    path = os.path.join(state_dir, "brain.json")
+    cache = read_json(path, {})
+    hit = cache.get(transcript)
+    if hit and hit.get("sig") == sig:
+        return hit["files"]
+    files = brain_touches(transcript, root, int(cfg["brain_window_kb"]) * 1024)
+    cache[transcript] = {"sig": sig, "files": files}
+    for k in list(cache)[:max(0, len(cache) - 20)]:
+        del cache[k]
+    write_json(path, cache)
+    return files
+
+
+def brain_label(rel, max_len):
+    parts = rel.split("/")
+    if "." in parts[-1]:
+        parts[-1] = parts[-1].rsplit(".", 1)[0]
+    if len("/".join(parts)) <= max_len:
+        return "/".join(parts)
+    head, rest = parts[0], parts[1:]
+    # keep the top-level section and as many trailing parts as fit
+    for keep in range(len(rest) - 1, 0, -1):
+        cand = "/".join([head, "\u2026"] + rest[-keep:])
+        if len(cand) <= max_len:
+            return cand
+    cand = head + "/\u2026/" + rest[-1] if rest else head
+    return cand if len(cand) <= max_len else cand[:max_len - 1] + "\u2026"
+
+
 # ---------------------------------------------------------------- drawing
 
 def paint(cfg, code, text):
@@ -307,6 +423,15 @@ def seg_session(d, cfg, st):
     return icon(cfg, "session", "session ") + fmt_hm(st["session"])
 
 
+def seg_elapsed(d, cfg, st):
+    # Claude Code's own wall-clock for the session. It skips time the session was closed,
+    # so a resumed session does not read as days.
+    ms = (d.get("cost") or {}).get("total_duration_ms")
+    if not isinstance(ms, (int, float)) or ms <= 0:
+        return None
+    return "open " + fmt_hm(ms / 60000.0)
+
+
 def seg_today(d, cfg, st):
     if st.get("today") is None:
         return None
@@ -357,6 +482,16 @@ def seg_where(d, cfg, st):
     return out
 
 
+def seg_brain(d, cfg, st):
+    files = (st.get("brain") or {}).get("files")
+    if not files:
+        return None
+    out = icon(cfg, "brain", "brain ") + brain_label(files[-1], int(cfg["brain_max_len"]))
+    if len(files) > 1:
+        out += dim(cfg, " +%d" % (len(files) - 1))
+    return out
+
+
 def seg_context(d, cfg, st):
     pct = pct_of(d.get("context_window"))
     if pct is None:
@@ -399,8 +534,9 @@ def seg_cache(d, cfg, st):
 
 
 SEGMENTS = {
-    "model": seg_model, "session": seg_session, "today": seg_today, "month": seg_month,
-    "cost": seg_cost, "lines": seg_lines, "name": seg_name, "where": seg_where,
+    "model": seg_model, "session": seg_session, "elapsed": seg_elapsed, "today": seg_today,
+    "month": seg_month, "cost": seg_cost, "lines": seg_lines, "name": seg_name,
+    "where": seg_where, "brain": seg_brain,
     "context": seg_context, "five_hour": seg_five_hour, "seven_day": seg_seven_day,
     "cache": seg_cache,
 }
@@ -431,14 +567,14 @@ def compose(names, d, cfg, st):
 
 
 def render(d, cfg, st):
-    lines = [compose(cfg["line1"], d, cfg, st), compose(cfg["line2"], d, cfg, st)]
+    lines = [compose(cfg[key], d, cfg, st) for key in ("line1", "line2", "line3")]
     return "\n".join(line for line in lines if line)
 
 
 def build_state(d, cfg, cfg_dir):
     state_dir = os.path.join(cfg_dir, "hud-state")
-    st = {"session": None, "today": None, "month": None, "git": None}
-    layout = cfg["line1"] + cfg["line2"]
+    st = {"session": None, "today": None, "month": None, "git": None, "brain": None}
+    layout = cfg["line1"] + cfg["line2"] + cfg["line3"]
 
     tp = d.get("transcript_path") or ""
     if tp and os.path.exists(tp) and {"session", "today", "month"} & set(layout):
@@ -454,6 +590,13 @@ def build_state(d, cfg, cfg_dir):
     cwd = (d.get("workspace") or {}).get("current_dir") or d.get("cwd") or ""
     if cwd and cfg["git"] and "where" in layout:
         st["git"] = git_info(cwd, state_dir)
+
+    if cfg["brain_path"] and "brain" in layout:
+        files = brain_files(tp, cfg, state_dir) if tp and os.path.exists(tp) else []
+        if not files and cwd:  # nothing touched yet, but the session may be started inside the brain
+            rel = relative_to_root(cwd, os.path.expanduser(cfg["brain_path"]))
+            files = [rel] if rel else []
+        st["brain"] = {"files": files}
     return st
 
 
@@ -462,7 +605,8 @@ def demo_data():
     return {
         "model": {"id": "claude-sonnet-5-5", "display_name": "Sonnet 5.5"},
         "workspace": {"current_dir": "/home/you/projects/my-app"},
-        "cost": {"total_cost_usd": 1.37, "total_lines_added": 212, "total_lines_removed": 48},
+        "cost": {"total_cost_usd": 1.37, "total_lines_added": 212, "total_lines_removed": 48,
+                 "total_duration_ms": (2 * 3600 + 10 * 60) * 1000},
         "context_window": {"used_percentage": 42},
         "effort": {"level": "high"},
         "rate_limits": {
