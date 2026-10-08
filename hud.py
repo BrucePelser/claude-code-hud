@@ -17,12 +17,12 @@ import time
 import unicodedata
 from datetime import datetime
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 DEFAULTS = {
     "icons": "emoji",  # "emoji", "custom" (needs fonts/ClaudeHudIcons.ttf installed) or "plain"
-    "layout": "rows",  # "rows" is three themed rows, "compact" is two
-    "max_width": 100,  # a segment that would push a line past this is skipped
+    "layout": "compact",  # "compact" is two rows, "rows" is three themed rows
+    "max_width": "auto",  # "auto" reads the terminal width (COLUMNS); a segment that would pass it is skipped
     "line1": None,  # None means "take it from the layout". A list of segment names overrides it.
     "line2": None,
     "line3": None,
@@ -45,15 +45,15 @@ DEFAULTS = {
 }
 
 LAYOUTS = {
-    "rows": {  # who and when, then limits, then place
+    "compact": {  # you and your project, then limits and the brain file
+        "line1": ["model", "where", "session", "today", "elapsed", "month"],
+        "line2": ["context", "five_hour", "seven_day", "cache", "brain"],
+        "line3": [],
+    },
+    "rows": {  # three themed rows: you, limits, place
         "line1": ["model", "session", "elapsed", "today", "month"],
         "line2": ["context", "five_hour", "seven_day", "cache"],
         "line3": ["where", "brain"],
-    },
-    "compact": {
-        "line1": ["model", "session", "elapsed", "where", "today", "month"],
-        "line2": ["context", "five_hour", "seven_day", "cache"],
-        "line3": ["brain"],
     },
 }
 
@@ -168,12 +168,23 @@ def config_dir(data):
     return os.path.join(os.path.expanduser("~"), ".claude")
 
 
+def resolve_width(value):
+    """A number, or "auto" for the terminal width Claude Code puts in COLUMNS (minus a margin)."""
+    if value == "auto":
+        try:
+            return max(60, int(os.environ["COLUMNS"]) - 4)
+        except (KeyError, ValueError):
+            return 100
+    return int(value)
+
+
 def make_config(overrides):
     cfg = _merge(DEFAULTS, overrides)
-    layout = LAYOUTS.get(cfg["layout"], LAYOUTS["rows"])
+    layout = LAYOUTS.get(cfg["layout"], LAYOUTS["compact"])
     for key in ("line1", "line2", "line3"):
         if cfg[key] is None:
             cfg[key] = layout[key]
+    cfg["max_width"] = resolve_width(cfg["max_width"])
     cfg["color"] = not os.environ.get("NO_COLOR")
     return cfg
 
@@ -324,29 +335,32 @@ def _strings(node):
             yield from _strings(v)
 
 
-def brain_touches(transcript, root, window_bytes):
-    """Paths under root that recent tool calls mentioned, relative to root, oldest first.
+PATH_KEYS = ("file_path", "path", "notebook_path")
+
+
+def scan_tool_calls(transcript, root, window_bytes):
+    """Read the recent tool calls of a transcript once.
+
+    Returns (brain, paths). `brain` is every path under `root` (when given) that a tool call
+    mentioned, relative to root, oldest first. `paths` is every file path a tool call named.
 
     Only tool_use blocks count. Tool results are skipped on purpose: a search that lists
     ten brain files would otherwise look like the session was working in all ten.
     """
-    variants = root_variants(root)
-    pattern = re.compile(
-        r"(?:%s)/([^\s\"'`<>|*?()\[\]{}]+)" % "|".join(re.escape(v) for v in variants), re.I)
-    needles = [v.lower().encode("utf-8") for v in variants]
+    pattern = None
+    if root:
+        variants = root_variants(root)
+        pattern = re.compile(
+            r"(?:%s)/([^\s\"'`<>|*?()\[\]{}]+)" % "|".join(re.escape(v) for v in variants), re.I)
     size = os.path.getsize(transcript)
     with open(transcript, "rb") as f:
         f.seek(max(0, size - window_bytes))
         lines = f.read().split(b"\n")
     if size > window_bytes:
         lines = lines[1:]  # the first line was cut in half
-    found = []
+    found, paths = [], []
     for line in lines:
         if not TOOL_USE_RE.search(line):
-            continue
-        # JSON doubles every backslash, so fold them before the cheap substring test
-        flat = line.lower().replace(b"\\\\", b"/")
-        if not any(n in flat for n in needles):
             continue
         try:
             blocks = json.loads(line)["message"]["content"]
@@ -355,35 +369,87 @@ def brain_touches(transcript, root, window_bytes):
         for block in blocks if isinstance(blocks, list) else []:
             if not (isinstance(block, dict) and block.get("type") == "tool_use"):
                 continue
-            for text in _strings(block.get("input")):
-                for m in pattern.finditer(text.replace("\\", "/")):
-                    rel = re.sub(r":\d+$", "", m.group(1).rstrip(".,;:"))
-                    if rel:
-                        found.append(rel)
+            tool_input = block.get("input")
+            if isinstance(tool_input, dict):
+                paths.extend(tool_input[k] for k in PATH_KEYS if isinstance(tool_input.get(k), str))
+            if pattern:
+                for text in _strings(tool_input):
+                    for m in pattern.finditer(text.replace("\\", "/")):
+                        rel = re.sub(r":\d+$", "", m.group(1).rstrip(".,;:"))
+                        if rel:
+                            found.append(rel)
     seen, newest_first = set(), []
     for rel in reversed(found):
         if rel not in seen:
             seen.add(rel)
             newest_first.append(rel)
-    return newest_first[::-1]
+    ordered = newest_first[::-1]
+    # a folder named in a command is not work on a page: prefer real files, fall back to folders
+    files = [r for r in ordered if "." in r.rsplit("/", 1)[-1]]
+    return (files or ordered), paths[-60:]
 
 
-def brain_files(transcript, cfg, state_dir):
-    """brain_touches, cached until the transcript grows."""
-    root = os.path.expanduser(cfg["brain_path"])
+def brain_touches(transcript, root, window_bytes):
+    return scan_tool_calls(transcript, root, window_bytes)[0]
+
+
+def transcript_scan(transcript, cfg, state_dir):
+    """scan_tool_calls with the settings applied, cached until the transcript grows."""
+    root = os.path.expanduser(cfg["brain_path"]) if cfg["brain_path"] else None
     stat = os.stat(transcript)
     sig = [stat.st_size, stat.st_mtime_ns, root, cfg["brain_window_kb"]]
-    path = os.path.join(state_dir, "brain.json")
+    path = os.path.join(state_dir, "tools.json")
     cache = read_json(path, {})
     hit = cache.get(transcript)
     if hit and hit.get("sig") == sig:
-        return hit["files"]
-    files = brain_touches(transcript, root, int(cfg["brain_window_kb"]) * 1024)
-    cache[transcript] = {"sig": sig, "files": files}
+        return hit["files"], hit["paths"]
+    files, paths = scan_tool_calls(transcript, root, int(cfg["brain_window_kb"]) * 1024)
+    cache[transcript] = {"sig": sig, "files": files, "paths": paths}
     for k in list(cache)[:max(0, len(cache) - 20)]:
         del cache[k]
     write_json(path, cache)
-    return files
+    return files, paths
+
+
+# ---------------------------------------------------------------- project
+
+SKIP_SEGMENTS = ("/scratchpad/", "/node_modules/", "/tool-results/")
+
+
+def find_git_root(path):
+    d = path if os.path.isdir(path) else os.path.dirname(path)
+    for _ in range(12):
+        if os.path.exists(os.path.join(d, ".git")):
+            return d
+        parent = os.path.dirname(d)
+        if parent == d:
+            return None
+        d = parent
+    return None
+
+
+def pick_project(cwd, paths, cfg, cfg_dir):
+    """The git repo the work is in: cwd's, else the newest file a tool call touched.
+
+    Sessions often start in the home folder, which says nothing. The brain, the Claude
+    config folder and scratch folders are not the work, so they never count.
+    """
+    def norm(p):
+        return p.replace("\\", "/").rstrip("/").lower()
+
+    skip = [norm(cfg_dir)]
+    if cfg["brain_path"]:
+        skip.append(norm(os.path.expanduser(cfg["brain_path"])))
+    home = norm(os.path.expanduser("~"))
+    for candidate in ([cwd] if cwd and norm(cwd) != home else []) + list(reversed(paths)):
+        n = norm(candidate) + "/"
+        if not os.path.isabs(candidate) or any(n.startswith(s + "/") for s in skip) \
+                or any(seg in n for seg in SKIP_SEGMENTS):
+            continue
+        root = find_git_root(candidate)
+        if root:
+            return root
+    return None
 
 
 def brain_label(rel, max_len):
@@ -398,8 +464,13 @@ def brain_label(rel, max_len):
         cand = "/".join([head, "\u2026"] + rest[-keep:])
         if len(cand) <= max_len:
             return cand
-    cand = head + "/\u2026/" + rest[-1] if rest else head
-    return cand if len(cand) <= max_len else cand[:max_len - 1] + "\u2026"
+    if not rest:
+        return head[:max_len - 1] + "\u2026"
+    cand = head + "/\u2026/" + rest[-1]
+    if len(cand) <= max_len:
+        return cand
+    room = max_len - len(head) - 2  # keep the top folder, shorten the file name
+    return head + "/" + rest[-1][:max(room, 4)] + "\u2026"
 
 
 # ---------------------------------------------------------------- drawing
@@ -510,11 +581,11 @@ def seg_name(d, cfg, st):
 
 
 def seg_where(d, cfg, st):
-    cwd = (d.get("workspace") or {}).get("current_dir") or d.get("cwd") or ""
-    if not cwd:
+    project = st.get("project")
+    if not project:
         return None
-    out = icon(cfg, "where") + (os.path.basename(cwd.rstrip("\\/")) or cwd)
-    git = st.get("git")
+    out = icon(cfg, "where") + project["name"]
+    git = project.get("git")
     if git:
         out += " " + icon(cfg, "branch", "\u2192 ") + git["branch"] + ("*" if git["dirty"] else "")
         if git["ahead"]:
@@ -528,10 +599,16 @@ def seg_brain(d, cfg, st):
     files = (st.get("brain") or {}).get("files")
     if not files:
         return None
-    out = icon(cfg, "brain", "brain ") + brain_label(files[-1], int(cfg["brain_max_len"]))
-    if len(files) > 1:
-        out += dim(cfg, " +%d" % (len(files) - 1))
-    return out
+    prefix = icon(cfg, "brain", "brain ")
+    extra = dim(cfg, " +%d" % (len(files) - 1)) if len(files) > 1 else ""
+    label = brain_label(files[-1], int(cfg["brain_max_len"]))
+    if st.get("room") is not None:  # shorten the label to the room left on the row, or hide it
+        avail = st["room"] - vis_len(prefix) - vis_len(extra)
+        if len(label) > avail:
+            if avail < 14:
+                return None
+            label = brain_label(files[-1], avail)
+    return prefix + label + extra
 
 
 def seg_context(d, cfg, st):
@@ -599,8 +676,9 @@ def compose(names, d, cfg, st):
         fn = SEGMENTS.get(name)
         if not fn:
             continue
+        room = cfg["max_width"] - used - (sep_w if parts else 0)  # width left on this row
         try:
-            text = fn(d, cfg, st)
+            text = fn(d, cfg, dict(st, room=room))
         except Exception:
             text = None
         if not text:
@@ -620,7 +698,7 @@ def render(d, cfg, st):
 
 def build_state(d, cfg, cfg_dir):
     state_dir = os.path.join(cfg_dir, "hud-state")
-    st = {"session": None, "today": None, "month": None, "git": None, "brain": None}
+    st = {"session": None, "today": None, "month": None, "project": None, "brain": None}
     layout = cfg["line1"] + cfg["line2"] + cfg["line3"]
 
     tp = d.get("transcript_path") or ""
@@ -635,11 +713,20 @@ def build_state(d, cfg, cfg_dir):
         st["session"], st["today"], st["month"] = ent["act"], day_min, month_min
 
     cwd = (d.get("workspace") or {}).get("current_dir") or d.get("cwd") or ""
-    if cwd and cfg["git"] and "where" in layout:
-        st["git"] = git_info(cwd, state_dir)
+    want_brain = bool(cfg["brain_path"]) and "brain" in layout
+    want_project = "where" in layout
+    files, paths = [], []
+    if tp and os.path.exists(tp) and (want_brain or want_project):
+        files, paths = transcript_scan(tp, cfg, state_dir)
 
-    if cfg["brain_path"] and "brain" in layout:
-        files = brain_files(tp, cfg, state_dir) if tp and os.path.exists(tp) else []
+    if want_project:
+        root = pick_project(cwd, paths, cfg, os.path.dirname(state_dir))
+        if root:
+            st["project"] = {"name": os.path.basename(root), "git": git_info(root, state_dir) if cfg["git"] else None}
+        elif cwd and os.path.normcase(os.path.normpath(cwd)) != os.path.normcase(os.path.normpath(os.path.expanduser("~"))):
+            st["project"] = {"name": os.path.basename(cwd.rstrip("\\/")) or cwd, "git": None}
+
+    if want_brain:
         if not files and cwd:  # nothing touched yet, but the session may be started inside the brain
             rel = relative_to_root(cwd, os.path.expanduser(cfg["brain_path"]))
             files = [rel] if rel else []
@@ -666,7 +753,7 @@ def demo_data():
 
 DEMO_STATE = {
     "session": 83, "today": 220, "month": 904,
-    "git": {"branch": "main", "dirty": True, "ahead": 1, "behind": 0},
+    "project": {"name": "my-app", "git": {"branch": "main", "dirty": True, "ahead": 1, "behind": 0}},
 }
 
 

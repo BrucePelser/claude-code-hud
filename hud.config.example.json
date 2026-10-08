@@ -1,7 +1,7 @@
 {
   "icons": "emoji",
-  "layout": "rows",
-  "max_width": 100,
+  "layout": "compact",
+  "max_width": "auto",
   "brain_path": null,
   "brain_max_len": 44,
   "brain_window_kb": 4096,

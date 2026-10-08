@@ -107,18 +107,19 @@ def frames():
     pressure_data["rate_limits"]["five_hour"]["used_percentage"] = 92
     pressure_data["rate_limits"]["seven_day"]["used_percentage"] = 88
     pressure_data["prompt_cache"] = {"warm": False, "caching_observed": True, "expires_at": None}
-    pressure_state = dict(hud.DEMO_STATE, git={"branch": "feature/login", "dirty": False, "ahead": 0, "behind": 2})
+    pressure_state = dict(hud.DEMO_STATE, project={
+        "name": "my-app", "git": {"branch": "feature/login", "dirty": False, "ahead": 0, "behind": 2}})
     brain_state = dict(hud.DEMO_STATE, brain={"files": [
         "plans/launch/plan.md", "reference/style-guide.md", "sessions/hud-notes-2026-10-07.md"]})
     return [
-        ('icons "custom" with a brain_path set. Row 1: you. Row 2: limits. Row 3: place.',
+        ('icons "custom", brain_path set. Row 1: you and your project. Row 2: limits and the brain file.',
          hud.render(hud.demo_data(), config(icons="custom"), brain_state)),
         ("Same icons under pressure: context hint, hot limits, cold cache, month against a 160h target",
-         hud.render(pressure_data, config(icons="custom", monthly_target_hours=160), pressure_state)),
+         hud.render(pressure_data, config(icons="custom", monthly_target_hours=160, max_width=110), pressure_state)),
         ('Without the icon font: "icons": "emoji" (the default)',
          hud.render(hud.demo_data(), config(), brain_state)),
-        ('"icons": "plain", "layout": "compact"',
-         hud.render(hud.demo_data(), config(icons="plain", layout="compact"), hud.DEMO_STATE)),
+        ('"icons": "plain", "layout": "rows" (three rows)',
+         hud.render(hud.demo_data(), config(icons="plain", layout="rows"), brain_state)),
     ]
 
 

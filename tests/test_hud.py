@@ -11,6 +11,7 @@ import hud  # noqa: E402
 
 
 def make_cfg(**over):
+    over.setdefault("max_width", 100)  # tests must not depend on the COLUMNS of whoever runs them
     cfg = hud.make_config(over)
     cfg["color"] = over.get("color", False)
     return cfg
@@ -123,8 +124,15 @@ class ActiveTimeTests(unittest.TestCase):
 
 
 class RenderTests(unittest.TestCase):
-    def test_demo_renders_three_themed_rows(self):
-        out = hud.render(hud.demo_data(), make_cfg(), hud.DEMO_STATE)
+    def test_default_layout_is_two_rows_with_the_project_on_row_one(self):
+        lines = hud.render(hud.demo_data(), make_cfg(), hud.DEMO_STATE).split("\n")
+        self.assertEqual(len(lines), 2)
+        self.assertIn("my-app", lines[0])
+        self.assertIn("main*", lines[0])
+        self.assertIn("ctx", lines[1])
+
+    def test_rows_layout_is_three_themed_rows(self):
+        out = hud.render(hud.demo_data(), make_cfg(layout="rows"), hud.DEMO_STATE)
         lines = out.split("\n")
         self.assertEqual(len(lines), 3)
         self.assertIn("Sonnet 5.5", lines[0])
@@ -135,10 +143,23 @@ class RenderTests(unittest.TestCase):
         self.assertIn("my-app", lines[2])
         self.assertIn("main*", lines[2])
 
-    def test_compact_layout_is_two_rows(self):
-        lines = hud.render(hud.demo_data(), make_cfg(layout="compact"), hud.DEMO_STATE).split("\n")
-        self.assertEqual(len(lines), 2)
-        self.assertIn("main*", lines[0])
+    def test_width_auto_follows_columns(self):
+        old = os.environ.get("COLUMNS")
+        try:
+            os.environ["COLUMNS"] = "120"
+            self.assertEqual(hud.resolve_width("auto"), 116)
+            os.environ["COLUMNS"] = "40"
+            self.assertEqual(hud.resolve_width("auto"), 60)
+            os.environ["COLUMNS"] = "wide"
+            self.assertEqual(hud.resolve_width("auto"), 100)
+            del os.environ["COLUMNS"]
+            self.assertEqual(hud.resolve_width("auto"), 100)
+            self.assertEqual(hud.resolve_width(88), 88)
+        finally:
+            if old is not None:
+                os.environ["COLUMNS"] = old
+            else:
+                os.environ.pop("COLUMNS", None)
 
     def test_explicit_lines_beat_the_layout(self):
         cfg = make_cfg(line1=["model"], line2=["cache"], line3=[])
@@ -273,7 +294,7 @@ class BrainTests(unittest.TestCase):
             cfg = make_cfg(brain_path=self.ROOT)
             st = hud.build_state({"transcript_path": path}, cfg, tmp)
             self.assertEqual(st["brain"]["files"], ["skills/style.md"])
-            self.assertTrue(os.path.exists(os.path.join(tmp, "hud-state", "brain.json")))
+            self.assertTrue(os.path.exists(os.path.join(tmp, "hud-state", "tools.json")))
             again = hud.build_state({"transcript_path": path}, cfg, tmp)
             self.assertEqual(again["brain"]["files"], ["skills/style.md"])
 
@@ -293,7 +314,7 @@ class BrainTests(unittest.TestCase):
 
     def test_brain_goes_on_line_three_and_counts_extras(self):
         state = dict(hud.DEMO_STATE, brain={"files": ["plans/a.md", "sessions/hud-2026.md"]})
-        out = hud.render(hud.demo_data(), make_cfg(), state)
+        out = hud.render(hud.demo_data(), make_cfg(layout="rows"), state)
         lines = out.split("\n")
         self.assertEqual(len(lines), 3)
         self.assertIn("sessions/hud-2026", lines[2])
@@ -303,6 +324,89 @@ class BrainTests(unittest.TestCase):
         state = dict(hud.DEMO_STATE, brain={"files": ["a/b.md"]})
         out = hud.render(hud.demo_data(), make_cfg(icons="plain"), state)
         self.assertIn("brain a/b", out)
+
+
+class ProjectTests(unittest.TestCase):
+    def make_repo(self, base, name):
+        root = os.path.join(base, name)
+        os.makedirs(os.path.join(root, ".git"))
+        os.makedirs(os.path.join(root, "src"))
+        return root
+
+    def transcript(self, base, *file_paths):
+        path = os.path.join(base, "s.jsonl")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(tool_use_line("Read", file_path=p) for p in file_paths) + "\n")
+        return path
+
+    def state(self, base, cwd, *file_paths, **cfg_over):
+        cfg = make_cfg(**cfg_over)
+        data = {"transcript_path": self.transcript(base, *file_paths), "workspace": {"current_dir": cwd}}
+        return hud.build_state(data, cfg, os.path.join(base, "cfg"))
+
+    def test_home_folder_session_finds_the_project_from_the_newest_touched_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, new = self.make_repo(tmp, "old-app"), self.make_repo(tmp, "new-app")
+            st = self.state(tmp, os.path.expanduser("~"),
+                            os.path.join(old, "src", "a.py"), os.path.join(new, "src", "b.py"))
+            self.assertEqual(st["project"]["name"], "new-app")
+
+    def test_cwd_repo_beats_touched_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            here, other = self.make_repo(tmp, "here"), self.make_repo(tmp, "other")
+            st = self.state(tmp, here, os.path.join(other, "src", "x.py"))
+            self.assertEqual(st["project"]["name"], "here")
+
+    def test_brain_and_config_folders_never_count_as_the_project(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            work, brain = self.make_repo(tmp, "work"), self.make_repo(tmp, "brain")
+            config = self.make_repo(os.path.join(tmp, "cfg"), "plugins") if os.makedirs(os.path.join(tmp, "cfg")) is None else None
+            st = self.state(tmp, os.path.expanduser("~"),
+                            os.path.join(work, "src", "a.py"),
+                            os.path.join(brain, "src", "page.md"),
+                            os.path.join(config, "src", "c.py"),
+                            brain_path=brain)
+            self.assertEqual(st["project"]["name"], "work")
+
+    def test_scratch_folders_are_skipped(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            work = self.make_repo(tmp, "work")
+            scratch = self.make_repo(os.path.join(tmp, "scratchpad"), "tmpjob") if os.makedirs(os.path.join(tmp, "scratchpad")) is None else None
+            st = self.state(tmp, os.path.expanduser("~"),
+                            os.path.join(work, "src", "a.py"), os.path.join(scratch, "src", "t.py"))
+            self.assertEqual(st["project"]["name"], "work")
+
+    def test_plain_folder_shows_its_name_and_home_shows_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            plain = os.path.join(tmp, "notes")
+            os.makedirs(plain)
+            self.assertEqual(self.state(tmp, plain)["project"], {"name": "notes", "git": None})
+            self.assertIsNone(self.state(tmp, os.path.expanduser("~"))["project"])
+
+    def test_where_is_hidden_without_a_project(self):
+        out = hud.render(hud.demo_data(), make_cfg(), dict(hud.DEMO_STATE, project=None))
+        self.assertNotIn("my-app", out)
+
+    def test_files_beat_folders_in_the_brain_scan(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "s.jsonl")
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(tool_use_line("Read", file_path="C:/Notes/brain/sessions/page.md") + "\n")
+                f.write(tool_use_line("Bash", command="ls C:/Notes/brain/sessions") + "\n")
+            self.assertEqual(hud.brain_touches(path, "C:/Notes/brain", 1 << 20), ["sessions/page.md"])
+
+    def test_brain_label_shrinks_to_the_room_left_and_hides_when_there_is_none(self):
+        state = dict(hud.DEMO_STATE, brain={"files": ["sessions/a-very-long-page-name-for-this-test.md"]})
+        roomy = hud.render(hud.demo_data(), make_cfg(max_width=140), state).split("\n")[1]
+        self.assertIn("sessions/a-very-long-page-name-for-this-test", roomy)
+        wide = hud.render(hud.demo_data(), make_cfg(max_width=100), state).split("\n")[1]
+        self.assertIn("sessions/a-very", wide)
+        self.assertIn("…", wide)
+        self.assertLessEqual(hud.vis_len(wide), 100)
+        tight = hud.render(hud.demo_data(), make_cfg(max_width=78), state).split("\n")[1]
+        self.assertLessEqual(hud.vis_len(tight), 78)
+        none = hud.render(hud.demo_data(), make_cfg(max_width=70), state).split("\n")[1]
+        self.assertNotIn("sessions/", none)
 
 
 class StateTests(unittest.TestCase):
