@@ -108,18 +108,23 @@ def frames():
     pressure_data["rate_limits"]["seven_day"]["used_percentage"] = 88
     pressure_data["prompt_cache"] = {"warm": False, "caching_observed": True, "expires_at": None}
     pressure_state = dict(hud.DEMO_STATE, project={
-        "name": "my-app", "git": {"branch": "feature/login", "dirty": False, "ahead": 0, "behind": 2}})
-    brain_state = dict(hud.DEMO_STATE, brain={"files": [
-        "plans/launch/plan.md", "reference/style-guide.md", "sessions/hud-notes-2026-10-07.md"]})
+        "name": "my-app", "git": {"branch": "feature/login", "dirty": False, "ahead": 0, "behind": 2,
+                                   "repo": "acme/my-app"}})
+    brain_state = dict(
+        hud.DEMO_STATE,
+        project={"name": "my-app", "git": {"branch": "main", "dirty": True, "ahead": 1, "behind": 0,
+                                           "repo": "acme/my-app"}},
+        brain_name={"name": "brain", "ok": True},
+        brain={"files": ["plans/launch/plan.md", "reference/style-guide.md", "sessions/hud-notes-2026-10-07.md"]})
     return [
-        ('icons "custom", brain_path set. Row 1: you and your project. Row 2: limits and the brain file.',
+        ('icons "custom", brain_path set. Row 1: you. Row 2: limits. Row 3: the GitHub repo, the brain and its file.',
          hud.render(hud.demo_data(), config(icons="custom"), brain_state)),
         ("Same icons under pressure: context hint, hot limits, cold cache, month against a 160h target",
-         hud.render(pressure_data, config(icons="custom", monthly_target_hours=160, max_width=110), pressure_state)),
+         hud.render(pressure_data, config(icons="custom", monthly_target_hours=160), pressure_state)),
         ('Without the icon font: "icons": "emoji" (the default)',
          hud.render(hud.demo_data(), config(), brain_state)),
-        ('"icons": "plain", "layout": "rows" (three rows)',
-         hud.render(hud.demo_data(), config(icons="plain", layout="rows"), brain_state)),
+        ('"icons": "plain", "layout": "compact" (two rows)',
+         hud.render(hud.demo_data(), config(icons="plain", layout="compact"), brain_state)),
     ]
 
 

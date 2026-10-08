@@ -124,11 +124,18 @@ class ActiveTimeTests(unittest.TestCase):
 
 
 class RenderTests(unittest.TestCase):
-    def test_default_layout_is_two_rows_with_the_project_on_row_one(self):
+    def test_default_layout_is_three_themed_rows_with_the_project_on_row_three(self):
         lines = hud.render(hud.demo_data(), make_cfg(), hud.DEMO_STATE).split("\n")
+        self.assertEqual(len(lines), 3)
+        self.assertNotIn("my-app", lines[0])
+        self.assertIn("ctx", lines[1])
+        self.assertIn("my-app", lines[2])
+        self.assertIn("main*", lines[2])
+
+    def test_compact_layout_is_two_rows_with_the_project_on_row_one(self):
+        lines = hud.render(hud.demo_data(), make_cfg(layout="compact"), hud.DEMO_STATE).split("\n")
         self.assertEqual(len(lines), 2)
         self.assertIn("my-app", lines[0])
-        self.assertIn("main*", lines[0])
         self.assertIn("ctx", lines[1])
 
     def test_rows_layout_is_three_themed_rows(self):
@@ -397,16 +404,56 @@ class ProjectTests(unittest.TestCase):
 
     def test_brain_label_shrinks_to_the_room_left_and_hides_when_there_is_none(self):
         state = dict(hud.DEMO_STATE, brain={"files": ["sessions/a-very-long-page-name-for-this-test.md"]})
-        roomy = hud.render(hud.demo_data(), make_cfg(max_width=140), state).split("\n")[1]
+        roomy = hud.render(hud.demo_data(), make_cfg(max_width=140, layout="compact"), state).split("\n")[1]
         self.assertIn("sessions/a-very-long-page-name-for-this-test", roomy)
-        wide = hud.render(hud.demo_data(), make_cfg(max_width=100), state).split("\n")[1]
+        wide = hud.render(hud.demo_data(), make_cfg(max_width=100, layout="compact"), state).split("\n")[1]
         self.assertIn("sessions/a-very", wide)
         self.assertIn("…", wide)
         self.assertLessEqual(hud.vis_len(wide), 100)
-        tight = hud.render(hud.demo_data(), make_cfg(max_width=78), state).split("\n")[1]
+        tight = hud.render(hud.demo_data(), make_cfg(max_width=78, layout="compact"), state).split("\n")[1]
         self.assertLessEqual(hud.vis_len(tight), 78)
-        none = hud.render(hud.demo_data(), make_cfg(max_width=70), state).split("\n")[1]
+        none = hud.render(hud.demo_data(), make_cfg(max_width=70, layout="compact"), state).split("\n")[1]
         self.assertNotIn("sessions/", none)
+
+    def test_remote_urls_become_owner_slash_name_and_never_show_credentials(self):
+        cases = {
+            "https://github.com/someone/tool.git": "someone/tool",
+            "git@github.com:someone/tool.git": "someone/tool",
+            "ssh://git@github.com:22/someone/tool": "someone/tool",
+            "https://user:SECRET@github.com/someone/site.git": "someone/site",
+            "https://gitlab.com/group/sub/proj.git": "group/sub/proj",
+            "https://github.com/someone/plain/": "someone/plain",
+            "ssh://git@10.0.0.5/srv/git/app": "",  # a private server path is not a repo name
+            "": "",
+            "not a url": "",
+        }
+        for url, want in cases.items():
+            self.assertEqual(hud.parse_remote(url), want, url)
+            self.assertNotIn("SECRET", hud.parse_remote(url))
+
+    def test_where_shows_the_repo_and_adds_the_folder_only_when_they_differ(self):
+        git = {"branch": "main", "dirty": False, "ahead": 0, "behind": 0, "repo": "acme/site"}
+        differs = dict(hud.DEMO_STATE, project={"name": "site-v2", "git": git})
+        self.assertIn("acme/site (site-v2)", hud.render(hud.demo_data(), make_cfg(), differs))
+        same = dict(hud.DEMO_STATE, project={"name": "site", "git": git})
+        out = hud.render(hud.demo_data(), make_cfg(), same)
+        self.assertIn("acme/site", out)
+        self.assertNotIn("(site)", out)
+        no_remote = dict(hud.DEMO_STATE, project={"name": "site", "git": dict(git, repo="")})
+        self.assertIn("site", hud.render(hud.demo_data(), make_cfg(), no_remote))
+
+    def test_brain_name_is_green_when_the_folder_exists_and_red_when_it_is_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            notes = os.path.join(tmp, "notes")
+            os.makedirs(notes)
+            here = hud.build_state({}, make_cfg(brain_path=notes), tmp)["brain_name"]
+            self.assertEqual(here, {"name": "notes", "ok": True})
+            gone = hud.build_state({}, make_cfg(brain_path=os.path.join(tmp, "gone")), tmp)["brain_name"]
+            self.assertEqual(gone, {"name": "gone", "ok": False})
+        out = hud.render(hud.demo_data(), make_cfg(color=True), dict(hud.DEMO_STATE, brain_name={"name": "x", "ok": False}))
+        self.assertIn("\x1b[38;5;196m○", out)
+        out = hud.render(hud.demo_data(), make_cfg(color=True), dict(hud.DEMO_STATE, brain_name={"name": "x", "ok": True}))
+        self.assertIn("\x1b[38;5;71m●", out)
 
 
 class StateTests(unittest.TestCase):

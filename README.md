@@ -1,13 +1,14 @@
 # claude-code-hud
 
-A status line for [Claude Code](https://code.claude.com). Two rows that fit your terminal. One Python file, standard library only, no network calls.
+A status line for [Claude Code](https://code.claude.com). Three themed rows that fit your terminal, or two if you are short on height. One Python file, standard library only, no network calls.
 
 ![The HUD with the custom icon set, under pressure, with emoji, and as plain text](assets/preview.svg)
 
-- **Row 1, you and your project:** model and effort, the git project you are working in and its branch, active time, time today, how long the session has been open, time this month.
-- **Row 2, limits and notes:** context window, 5-hour and 7-day usage, prompt cache timer, and the file in your notes folder (a "brain", wiki or docs vault) that the session is working in.
+- **Row 1, you:** model and effort, active time, time today, how long the session has been open, time this month.
+- **Row 2, limits:** context window, 5-hour and 7-day usage, prompt cache timer.
+- **Row 3, place:** the GitHub repo you are working in (`owner/repo`) and its branch, the name of your notes folder (a "brain", wiki or docs vault) with a dot that is green when the folder exists, and the file in it that the session is working on.
 
-Items are listed in priority order. When your terminal is narrow, the last ones drop off first. Want three themed rows instead? Set `"layout": "rows"`.
+Items are listed in priority order. When your terminal is narrow, the last ones drop off first. Short on height? Set `"layout": "compact"` for two rows.
 
 ## What it shows
 
@@ -23,7 +24,8 @@ Each segment has an icon, so there are no labels like "open" or "today" to read.
 | `cost` | Session cost estimate in USD (list price, may differ from your bill) |
 | `lines` | Lines added and removed this session |
 | `name` | Session name, if you set one with `/rename` |
-| `where` | The git project you are working in, its branch, `*` if dirty, `↑2` ahead, `↓1` behind |
+| `where` | The git project you are working in: `owner/repo` from the origin remote (GitHub, GitLab, Bitbucket or Codeberg), else the folder name. The folder is added in brackets when it is named differently. Then the branch, `*` if dirty, `↑2` ahead, `↓1` behind |
+| `brain_name` | The name of your notes folder, with a green dot when it exists and a red circle when it is missing. Needs `brain_path` |
 | `brain` | Newest file the session touched in your notes folder, plus `+N` for other recent files. Needs `brain_path`. Shortened to the room left on the row |
 | `context` | Context window bar. Shows a hint once you pass 75% |
 | `five_hour` | 5-hour usage bar and time until reset |
@@ -32,7 +34,7 @@ Each segment has an icon, so there are no labels like "open" or "today" to read.
 
 Bars turn orange at 60% and red at 85%. A segment hides itself when Claude Code does not send its data. Rate limits only exist for Pro and Max plans, so API users will not see those two bars.
 
-Default rows: `model where session today elapsed month` / `context five_hour seven_day cache brain`. `cost`, `lines` and `name` are off until you add them to a row.
+Default rows: `model session today elapsed month` / `context five_hour seven_day cache` / `where brain_name brain`. `cost`, `lines` and `name` are off until you add them to a row.
 
 ## Icons
 
@@ -110,7 +112,7 @@ Edit `~/.claude/hud.config.json`. Every key is optional. Set `CLAUDE_HUD_CONFIG`
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `icons` | `"emoji"` | `"custom"` (needs the icon font), `"emoji"` or `"plain"` |
-| `layout` | `"compact"` | `"compact"` is two rows. `"rows"` is three themed rows: you, limits, then the project and brain file |
+| `layout` | `"rows"` | `"rows"` is three themed rows: you, limits, then the repo and brain. `"compact"` is two rows, with the project on row 1 and the brain file on row 2 |
 | `line1`, `line2`, `line3` | from the layout | Segment names in order. A list here replaces that row. Put what matters most first |
 | `max_width` | `"auto"` | Row width limit. `"auto"` uses your terminal width (Claude Code sets `COLUMNS`) minus 4, or 100 if it is not set. A number fixes it. A segment that would pass the limit is skipped, last ones first |
 | `brain_path` | `null` | Folder to track, e.g. `"~/brain"`. Turns on the `brain` segment |
@@ -146,7 +148,7 @@ Example, a compact HUD with cost, no icons, and only two rows:
 
 **Open time** is the session's own wall-clock figure from Claude Code. It leaves out the time a session was closed, so a resumed session does not read as days. Active time is usually the smaller number: open time includes the minutes you spent away.
 
-**Project** answers "where am I working". Sessions often start in your home folder, which tells you nothing, so the HUD looks for the git repository of the working folder first, then of the newest file a tool call touched in the last 4 MB of the transcript. Your notes folder, the Claude config folder and scratch folders never count as the project. If there is no repository, a working folder other than home is shown by name, and a home folder shows nothing. Work done by subagents is written to separate transcripts, so it does not show up here.
+**Project** answers "where am I working". Sessions often start in your home folder, which tells you nothing, so the HUD looks for the git repository of the working folder first, then of the newest file a tool call touched in the last 4 MB of the transcript. Your notes folder, the Claude config folder and scratch folders never count as the project. If there is no repository, a working folder other than home is shown by name, and a home folder shows nothing. Work done by subagents is written to separate transcripts, so it does not show up here. The `owner/repo` name comes from `git remote get-url origin` (read every 5 minutes). Any username or token inside a remote URL is stripped before anything is shown.
 
 **Brain** looks at the same tool calls (reads, edits, writes, shell commands) and keeps any path under `brain_path`. The newest file is shown, and a folder named in a command only counts when no file was touched. Search results and file listings do not count, only paths Claude actually used. If no file has been touched yet but the session started inside `brain_path`, it shows that folder instead.
 
@@ -156,13 +158,14 @@ Example, a compact HUD with cost, no icons, and only two rows:
 
 ## Privacy
 
-Nothing leaves your machine. The HUD makes no network calls. It reads the JSON Claude Code gives it, your local session transcripts (timestamps only, message text is never stored), and runs `git status` in your working folder. It writes small files to `<config dir>/hud-state/`: the per-day time totals, a 5-second git cache, and a cache of the file paths found in your transcripts' tool calls (used for the project and brain items). Delete that folder to reset.
+Nothing leaves your machine. The HUD makes no network calls. It reads the JSON Claude Code gives it, your local session transcripts (timestamps only, message text is never stored), and runs `git status` and `git remote get-url origin` in your project folder. It writes small files to `<config dir>/hud-state/`: the per-day time totals, a 5-second git cache, and a cache of the file paths found in your transcripts' tool calls (used for the project and brain items). Delete that folder to reset.
 
 ## Troubleshooting
 
 - **Nothing shows.** Run `python hud.py --demo`. If that works, check the `command` path in `settings.json`. Set `CLAUDE_HUD_DEBUG=1` in the environment to see errors instead of a bare model name.
 - **Line wraps in a narrow pane.** With `max_width` on `"auto"` this should not happen. If your terminal does not pass `COLUMNS`, set a number.
-- **A segment is missing.** It did not fit the row width. Widen the pane, move that segment to another row, or use `"layout": "rows"` for more room.
+- **A segment is missing.** It did not fit the row width. Widen the pane or move that segment to a row with room. The `"rows"` layout has the most room; `"compact"` has the least.
+- **The repo shows the folder name, not `owner/repo`.** The repository has no `origin` remote, or the remote is not on GitHub, GitLab, Bitbucket or Codeberg. A path on a private server is not shown as a repo name.
 - **The project shows nothing.** The session is in your home folder and no tool call has touched a file inside a git repository yet. It appears as soon as one does.
 - **No brain segment.** Set `brain_path` and use a file in it. Only the last 4 MB of transcript is scanned, so a brain file touched long ago drops off.
 - **Icons show as empty boxes, or a diamond with a question mark.** The terminal does not have the icon font in its font list. See "Install the icon font", or set `"icons": "emoji"`.

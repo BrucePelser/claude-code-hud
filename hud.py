@@ -17,11 +17,11 @@ import time
 import unicodedata
 from datetime import datetime
 
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 
 DEFAULTS = {
     "icons": "emoji",  # "emoji", "custom" (needs fonts/ClaudeHudIcons.ttf installed) or "plain"
-    "layout": "compact",  # "compact" is two rows, "rows" is three themed rows
+    "layout": "rows",  # "rows" is three themed rows, "compact" is two
     "max_width": "auto",  # "auto" reads the terminal width (COLUMNS); a segment that would pass it is skipped
     "line1": None,  # None means "take it from the layout". A list of segment names overrides it.
     "line2": None,
@@ -45,22 +45,22 @@ DEFAULTS = {
 }
 
 LAYOUTS = {
-    "compact": {  # you and your project, then limits and the brain file
+    "rows": {  # three themed rows: you, limits, place. Nothing has to be dropped.
+        "line1": ["model", "session", "today", "elapsed", "month"],
+        "line2": ["context", "five_hour", "seven_day", "cache"],
+        "line3": ["where", "brain_name", "brain"],
+    },
+    "compact": {  # two rows: you and your project, then limits and the brain file
         "line1": ["model", "where", "session", "today", "elapsed", "month"],
         "line2": ["context", "five_hour", "seven_day", "cache", "brain"],
         "line3": [],
-    },
-    "rows": {  # three themed rows: you, limits, place
-        "line1": ["model", "session", "elapsed", "today", "month"],
-        "line2": ["context", "five_hour", "seven_day", "cache"],
-        "line3": ["where", "brain"],
     },
 }
 
 EMOJI = {
     "model": "\u26a1 ", "session": "\u23f1 ", "elapsed": "\U0001f550 ", "today": "\U0001f4c5 ",
     "month": "\U0001f4c6 ", "cost": "\U0001f4b0 ", "where": "\U0001f4c1 ", "branch": "\U0001f33f ",
-    "brain": "\U0001f4c2 ", "context": "\U0001f50b ", "reset": "\u23f3",
+    "brain": "\U0001f4c2 ", "brain_name": "\U0001f9e0 ", "context": "\U0001f50b ", "reset": "\u23f3",
 }
 
 # Code points of fonts/ClaudeHudIcons.ttf. A test checks this against icons/design.py.
@@ -75,6 +75,7 @@ CUSTOM_ROLES = {
     "model": ("model", "model"), "session": ("active", "time"), "elapsed": ("open", "time"),
     "today": ("today", "time"), "month": ("month", "time"), "cost": ("cost", "cost"),
     "where": ("folder", "folder"), "branch": ("branch", "branch"), "brain": ("note", "brain"),
+    "brain_name": ("book", "brain"),
     "context": ("context", "context"), "reset": ("reset", "dim"),
 }
 
@@ -180,7 +181,7 @@ def resolve_width(value):
 
 def make_config(overrides):
     cfg = _merge(DEFAULTS, overrides)
-    layout = LAYOUTS.get(cfg["layout"], LAYOUTS["compact"])
+    layout = LAYOUTS.get(cfg["layout"], LAYOUTS["rows"])
     for key in ("line1", "line2", "line3"):
         if cfg[key] is None:
             cfg[key] = layout[key]
@@ -275,6 +276,23 @@ def parse_git_status(text):
     return info if info["branch"] else None
 
 
+CODE_HOSTS = re.compile(r"github|gitlab|bitbucket|codeberg", re.I)
+
+
+def parse_remote(url):
+    """owner/name from a git remote URL (https, ssh:// or git@host:owner/name).
+
+    Only known code hosts count: a path on a private server is not a repo name. Credentials
+    in the URL are dropped, so they can never reach the screen.
+    """
+    u = re.sub(r"^[a-z][a-z0-9+.-]*://", "", url.strip(), flags=re.I)
+    u = re.sub(r"^[^@/]+@", "", u)  # user@ or user:token@
+    m = re.match(r"^([^/:]+)(?::\d+)?[/:](.+?)/([^/]+?)(?:\.git)?/?$", u)
+    if not m or not CODE_HOSTS.search(m.group(1)):
+        return ""
+    return "%s/%s" % (m.group(2), m.group(3))
+
+
 def git_info(cwd, state_dir, ttl=5):
     cache_path = os.path.join(state_dir, "git.json")
     cache = read_json(cache_path, {})
@@ -282,19 +300,22 @@ def git_info(cwd, state_dir, ttl=5):
     if hit and time.time() - hit["ts"] < ttl:
         return hit["info"]
     info = None
+    repo, repo_ts = (hit or {}).get("repo", ""), (hit or {}).get("rts", 0)
     try:
         flags = 0x08000000 if os.name == "nt" else 0  # CREATE_NO_WINDOW
         env = dict(os.environ, GIT_OPTIONAL_LOCKS="0")
-        out = subprocess.run(
-            ["git", "-C", cwd, "status", "--porcelain=v2", "--branch", "-uno"],
-            capture_output=True, text=True, timeout=1.5, env=env,
-            stdin=subprocess.DEVNULL, creationflags=flags,
-        )
+        run = dict(capture_output=True, text=True, timeout=1.5, env=env, stdin=subprocess.DEVNULL, creationflags=flags)
+        out = subprocess.run(["git", "-C", cwd, "status", "--porcelain=v2", "--branch", "-uno"], **run)
         if out.returncode == 0:
             info = parse_git_status(out.stdout)
+            if info and time.time() - repo_ts > 300:  # the remote hardly ever changes
+                url = subprocess.run(["git", "-C", cwd, "remote", "get-url", "origin"], **run).stdout
+                repo, repo_ts = parse_remote(url), time.time()
+            if info:
+                info["repo"] = repo
     except Exception:
         info = hit["info"] if hit else None
-    cache[cwd] = {"ts": time.time(), "info": info}
+    cache[cwd] = {"ts": time.time(), "info": info, "repo": repo, "rts": repo_ts}
     if len(cache) > 20:
         for k in list(cache)[:len(cache) - 20]:
             del cache[k]
@@ -584,8 +605,11 @@ def seg_where(d, cfg, st):
     project = st.get("project")
     if not project:
         return None
-    out = icon(cfg, "where") + project["name"]
     git = project.get("git")
+    repo = (git or {}).get("repo")  # owner/name from the origin remote, when it is on a code host
+    out = icon(cfg, "where") + (repo or project["name"])
+    if repo and repo.split("/")[-1].lower() != project["name"].lower():
+        out += dim(cfg, " (%s)" % project["name"])  # the folder is named differently from the repo
     if git:
         out += " " + icon(cfg, "branch", "\u2192 ") + git["branch"] + ("*" if git["dirty"] else "")
         if git["ahead"]:
@@ -609,6 +633,16 @@ def seg_brain(d, cfg, st):
                 return None
             label = brain_label(files[-1], avail)
     return prefix + label + extra
+
+
+def seg_brain_name(d, cfg, st):
+    """Which brain this is, and whether its folder is there (green dot) or missing (red)."""
+    info = st.get("brain_name")
+    if not info:
+        return None
+    ok = info["ok"]
+    dot = paint(cfg, cfg["colors"]["ok"] if ok else cfg["colors"]["bad"], "●" if ok else "○")
+    return icon(cfg, "brain_name", "brain ") + info["name"] + " " + dot
 
 
 def seg_context(d, cfg, st):
@@ -660,7 +694,7 @@ def seg_cache(d, cfg, st):
 SEGMENTS = {
     "model": seg_model, "session": seg_session, "elapsed": seg_elapsed, "today": seg_today,
     "month": seg_month, "cost": seg_cost, "lines": seg_lines, "name": seg_name,
-    "where": seg_where, "brain": seg_brain,
+    "where": seg_where, "brain": seg_brain, "brain_name": seg_brain_name,
     "context": seg_context, "five_hour": seg_five_hour, "seven_day": seg_seven_day,
     "cache": seg_cache,
 }
@@ -698,7 +732,7 @@ def render(d, cfg, st):
 
 def build_state(d, cfg, cfg_dir):
     state_dir = os.path.join(cfg_dir, "hud-state")
-    st = {"session": None, "today": None, "month": None, "project": None, "brain": None}
+    st = {"session": None, "today": None, "month": None, "project": None, "brain": None, "brain_name": None}
     layout = cfg["line1"] + cfg["line2"] + cfg["line3"]
 
     tp = d.get("transcript_path") or ""
@@ -725,6 +759,10 @@ def build_state(d, cfg, cfg_dir):
             st["project"] = {"name": os.path.basename(root), "git": git_info(root, state_dir) if cfg["git"] else None}
         elif cwd and os.path.normcase(os.path.normpath(cwd)) != os.path.normcase(os.path.normpath(os.path.expanduser("~"))):
             st["project"] = {"name": os.path.basename(cwd.rstrip("\\/")) or cwd, "git": None}
+
+    if cfg["brain_path"] and "brain_name" in layout:
+        root = os.path.expanduser(cfg["brain_path"])
+        st["brain_name"] = {"name": os.path.basename(root.rstrip("\\/")) or root, "ok": os.path.isdir(root)}
 
     if want_brain:
         if not files and cwd:  # nothing touched yet, but the session may be started inside the brain

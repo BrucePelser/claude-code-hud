@@ -1,29 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="944" height="396" viewBox="0 0 944 396" role="img" aria-label="claude-code-hud preview: two status lines showing model, session time, git branch, context and rate limit bars">
+<svg xmlns="http://www.w3.org/2000/svg" width="917" height="444" viewBox="0 0 917 444" role="img" aria-label="claude-code-hud preview: two status lines showing model, session time, git branch, context and rate limit bars">
   <rect width="100%" height="100%" rx="10" fill="#1b1d27"/>
   <g font-family="Cascadia Mono, Consolas, Menlo, DejaVu Sans Mono, monospace" font-size="15" xml:space="preserve">
-  <text x="22" y="34" fill="#6c7086" font-size="12" font-family="system-ui, sans-serif">icons "custom", brain_path set. Row 1: you and your project. Row 2: limits and the brain file.</text>
+  <text x="22" y="34" fill="#6c7086" font-size="12" font-family="system-ui, sans-serif">icons "custom", brain_path set. Row 1: you. Row 2: limits. Row 3: the GitHub repo, the brain and its file.</text>
   <g>
     <g transform="translate(22.8 54.0) scale(0.5625)" fill="none" stroke="#af87ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#af87ff"><polygon points="10.5,5 12.66,11.34 19,13.5 12.66,15.66 10.5,22 8.34,15.66 2,13.5 8.34,11.34" fill="currentColor" stroke-width="1.4"/><polygon points="18.6,1.8 19.52,4.48 22.2,5.4 19.52,6.32 18.6,9 17.68,6.32 15,5.4 17.68,4.48" fill="currentColor" stroke-width="1"/></g>
     <text x="40.0 49.0 58.0 67.0 76.0 85.0" y="66" fill="#d6d9e5" font-weight="700">Sonnet</text>
     <text x="103.0 112.0 121.0" y="66" fill="#d6d9e5" font-weight="700">5.5</text>
     <text x="130.0 139.0 148.0 157.0 166.0" y="66" fill="#8a8a8a">·high</text>
     <text x="184.0" y="66" fill="#8a8a8a">│</text>
-    <g transform="translate(202.8 54.0) scale(0.5625)" fill="none" stroke="#87afd7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#87afd7"><polygon points="3,6 9,6 11.4,8.8 21,8.8 21,19 3,19"/></g>
-    <text x="220.0 229.0 238.0 247.0 256.0 265.0" y="66" fill="#d6d9e5">my-app</text>
-    <g transform="translate(283.8 54.0) scale(0.5625)" fill="none" stroke="#87d787" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#87d787"><circle cx="6" cy="5" r="2.2"/><circle cx="6" cy="19" r="2.2"/><circle cx="18" cy="7" r="2.2"/><polyline points="6,7.2 6,16.8"/><path d="M18 9.2 C18 14.5 6 11 6 14.5"/></g>
-    <text x="301.0 310.0 319.0 328.0 337.0 346.0 355.0" y="66" fill="#d6d9e5">main*↑1</text>
-    <text x="373.0" y="66" fill="#8a8a8a">│</text>
-    <g transform="translate(391.8 54.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><polyline points="2,12 7,12 10,4.5 14,19.5 17,12 22,12"/></g>
-    <text x="409.0 418.0 427.0 436.0 445.0" y="66" fill="#d6d9e5">1h23m</text>
-    <text x="463.0" y="66" fill="#8a8a8a">│</text>
-    <g transform="translate(481.8 54.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><rect x="3" y="5" width="18" height="16" rx="2.5"/><polyline points="3,10 21,10"/><polyline points="8,2.8 8,6.8"/><polyline points="16,2.8 16,6.8"/><circle cx="12" cy="15.6" r="2" fill="currentColor" stroke="none"/></g>
-    <text x="499.0 508.0 517.0 526.0 535.0" y="66" fill="#d6d9e5">3h40m</text>
-    <text x="553.0" y="66" fill="#8a8a8a">│</text>
-    <g transform="translate(571.8 54.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><circle cx="12" cy="12" r="9"/><polyline points="12,6.5 12,12 16,14.5"/></g>
-    <text x="589.0 598.0 607.0 616.0 625.0" y="66" fill="#d6d9e5">2h10m</text>
-    <text x="643.0" y="66" fill="#8a8a8a">│</text>
-    <g transform="translate(661.8 54.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><rect x="3" y="5" width="18" height="16" rx="2.5"/><polyline points="3,10 21,10"/><polyline points="8,2.8 8,6.8"/><polyline points="16,2.8 16,6.8"/><circle cx="8" cy="13.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="12" cy="13.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="16" cy="13.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="8" cy="17.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="12" cy="17.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="16" cy="17.8" r="1.25" fill="currentColor" stroke="none"/></g>
-    <text x="679.0 688.0 697.0 706.0 715.0 724.0" y="66" fill="#d6d9e5">15h04m</text>
+    <g transform="translate(202.8 54.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><polyline points="2,12 7,12 10,4.5 14,19.5 17,12 22,12"/></g>
+    <text x="220.0 229.0 238.0 247.0 256.0" y="66" fill="#d6d9e5">1h23m</text>
+    <text x="274.0" y="66" fill="#8a8a8a">│</text>
+    <g transform="translate(292.8 54.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><rect x="3" y="5" width="18" height="16" rx="2.5"/><polyline points="3,10 21,10"/><polyline points="8,2.8 8,6.8"/><polyline points="16,2.8 16,6.8"/><circle cx="12" cy="15.6" r="2" fill="currentColor" stroke="none"/></g>
+    <text x="310.0 319.0 328.0 337.0 346.0" y="66" fill="#d6d9e5">3h40m</text>
+    <text x="364.0" y="66" fill="#8a8a8a">│</text>
+    <g transform="translate(382.8 54.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><circle cx="12" cy="12" r="9"/><polyline points="12,6.5 12,12 16,14.5"/></g>
+    <text x="400.0 409.0 418.0 427.0 436.0" y="66" fill="#d6d9e5">2h10m</text>
+    <text x="454.0" y="66" fill="#8a8a8a">│</text>
+    <g transform="translate(472.8 54.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><rect x="3" y="5" width="18" height="16" rx="2.5"/><polyline points="3,10 21,10"/><polyline points="8,2.8 8,6.8"/><polyline points="16,2.8 16,6.8"/><circle cx="8" cy="13.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="12" cy="13.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="16" cy="13.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="8" cy="17.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="12" cy="17.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="16" cy="17.8" r="1.25" fill="currentColor" stroke="none"/></g>
+    <text x="490.0 499.0 508.0 517.0 526.0 535.0" y="66" fill="#d6d9e5">15h04m</text>
   </g>
   <g>
     <g transform="translate(22.8 78.0) scale(0.5625)" fill="none" stroke="#87d787" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#87d787"><rect x="6" y="6" width="12" height="12" rx="1.8"/><polyline points="9.5,2.6 9.5,6"/><polyline points="14.5,2.6 14.5,6"/><polyline points="9.5,18 9.5,21.4"/><polyline points="14.5,18 14.5,21.4"/><polyline points="2.6,9.5 6,9.5"/><polyline points="2.6,14.5 6,14.5"/><polyline points="18,9.5 21.4,9.5"/><polyline points="18,14.5 21.4,14.5"/></g>
@@ -48,161 +43,172 @@
     <text x="598.0" y="90" fill="#8a8a8a">│</text>
     <g transform="translate(616.8 78.0) scale(0.5625)" fill="none" stroke="#ff8700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#ff8700"><path d="M12 2.6 C7.6 7.2 5.6 10.6 5.6 14.6 C5.6 18.6 8.4 21.4 12 21.4 C15.6 21.4 18.4 18.6 18.4 14.6 C18.4 12 17.4 10.2 16.2 8.6 C15.4 11.2 14 12 12.8 12 C12.8 8.8 12.4 5.6 12 2.6 Z"/></g>
     <text x="634.0 643.0 652.0" y="90" fill="#8a8a8a">54m</text>
-    <text x="670.0" y="90" fill="#8a8a8a">│</text>
-    <g transform="translate(688.8 78.0) scale(0.5625)" fill="none" stroke="#d7af5f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#d7af5f"><polygon points="6,3 14,3 19,8 19,21 6,21"/><polyline points="14,3 14,8 19,8"/><polyline points="9.5,13 15.5,13"/><polyline points="9.5,17 15.5,17"/></g>
-    <text x="706.0 715.0 724.0 733.0 742.0 751.0 760.0 769.0 778.0 787.0 796.0 805.0 814.0 823.0 832.0 841.0 850.0 859.0 868.0 877.0 886.0" y="90" fill="#d6d9e5">sessions/hud-notes-2…</text>
-    <text x="904.0 913.0" y="90" fill="#8a8a8a">+2</text>
-  </g>
-  <text x="22" y="122" fill="#6c7086" font-size="12" font-family="system-ui, sans-serif">Same icons under pressure: context hint, hot limits, cold cache, month against a 160h target</text>
-  <g>
-    <g transform="translate(22.8 142.0) scale(0.5625)" fill="none" stroke="#af87ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#af87ff"><polygon points="10.5,5 12.66,11.34 19,13.5 12.66,15.66 10.5,22 8.34,15.66 2,13.5 8.34,11.34" fill="currentColor" stroke-width="1.4"/><polygon points="18.6,1.8 19.52,4.48 22.2,5.4 19.52,6.32 18.6,9 17.68,6.32 15,5.4 17.68,4.48" fill="currentColor" stroke-width="1"/></g>
-    <text x="40.0 49.0 58.0 67.0 76.0 85.0" y="154" fill="#d6d9e5" font-weight="700">Sonnet</text>
-    <text x="103.0 112.0 121.0" y="154" fill="#d6d9e5" font-weight="700">5.5</text>
-    <text x="130.0 139.0 148.0 157.0 166.0" y="154" fill="#8a8a8a">·high</text>
-    <text x="184.0" y="154" fill="#8a8a8a">│</text>
-    <g transform="translate(202.8 142.0) scale(0.5625)" fill="none" stroke="#87afd7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#87afd7"><polygon points="3,6 9,6 11.4,8.8 21,8.8 21,19 3,19"/></g>
-    <text x="220.0 229.0 238.0 247.0 256.0 265.0" y="154" fill="#d6d9e5">my-app</text>
-    <g transform="translate(283.8 142.0) scale(0.5625)" fill="none" stroke="#87d787" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#87d787"><circle cx="6" cy="5" r="2.2"/><circle cx="6" cy="19" r="2.2"/><circle cx="18" cy="7" r="2.2"/><polyline points="6,7.2 6,16.8"/><path d="M18 9.2 C18 14.5 6 11 6 14.5"/></g>
-    <text x="301.0 310.0 319.0 328.0 337.0 346.0 355.0 364.0 373.0 382.0 391.0 400.0 409.0 418.0 427.0" y="154" fill="#d6d9e5">feature/login↓2</text>
-    <text x="445.0" y="154" fill="#8a8a8a">│</text>
-    <g transform="translate(463.8 142.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><polyline points="2,12 7,12 10,4.5 14,19.5 17,12 22,12"/></g>
-    <text x="481.0 490.0 499.0 508.0 517.0" y="154" fill="#d6d9e5">1h23m</text>
-    <text x="535.0" y="154" fill="#8a8a8a">│</text>
-    <g transform="translate(553.8 142.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><rect x="3" y="5" width="18" height="16" rx="2.5"/><polyline points="3,10 21,10"/><polyline points="8,2.8 8,6.8"/><polyline points="16,2.8 16,6.8"/><circle cx="12" cy="15.6" r="2" fill="currentColor" stroke="none"/></g>
-    <text x="571.0 580.0 589.0 598.0 607.0" y="154" fill="#d6d9e5">3h40m</text>
-    <text x="625.0" y="154" fill="#8a8a8a">│</text>
-    <g transform="translate(643.8 142.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><circle cx="12" cy="12" r="9"/><polyline points="12,6.5 12,12 16,14.5"/></g>
-    <text x="661.0 670.0 679.0 688.0 697.0" y="154" fill="#d6d9e5">2h10m</text>
-    <text x="715.0" y="154" fill="#8a8a8a">│</text>
-    <g transform="translate(733.8 142.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><rect x="3" y="5" width="18" height="16" rx="2.5"/><polyline points="3,10 21,10"/><polyline points="8,2.8 8,6.8"/><polyline points="16,2.8 16,6.8"/><circle cx="8" cy="13.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="12" cy="13.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="16" cy="13.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="8" cy="17.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="12" cy="17.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="16" cy="17.8" r="1.25" fill="currentColor" stroke="none"/></g>
-    <text x="751.0 760.0 769.0 778.0 787.0 796.0" y="154" fill="#5faf5f">15h04m</text>
-    <text x="805.0 814.0 823.0 832.0 841.0" y="154" fill="#8a8a8a">/160h</text>
   </g>
   <g>
-    <g transform="translate(22.8 166.0) scale(0.5625)" fill="none" stroke="#87d787" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#87d787"><rect x="6" y="6" width="12" height="12" rx="1.8"/><polyline points="9.5,2.6 9.5,6"/><polyline points="14.5,2.6 14.5,6"/><polyline points="9.5,18 9.5,21.4"/><polyline points="14.5,18 14.5,21.4"/><polyline points="2.6,9.5 6,9.5"/><polyline points="2.6,14.5 6,14.5"/><polyline points="18,9.5 21.4,9.5"/><polyline points="18,14.5 21.4,14.5"/></g>
-    <text x="40.0 49.0 58.0" y="178" fill="#d6d9e5">ctx</text>
-    <text x="76.0 85.0 94.0 103.0 112.0" y="178" fill="#ff0000">█████</text>
-    <text x="121.0" y="178" fill="#8a8a8a">░</text>
-    <text x="139.0 148.0 157.0" y="178" fill="#d6d9e5">91%</text>
-    <text x="175.0 184.0 193.0 202.0 211.0 220.0 229.0 238.0 247.0" y="178" fill="#ff8700">/compact?</text>
-    <text x="265.0" y="178" fill="#8a8a8a">│</text>
-    <text x="283.0 292.0" y="178" fill="#d6d9e5">5h</text>
-    <text x="310.0 319.0 328.0 337.0 346.0 355.0" y="178" fill="#ff0000">██████</text>
-    <text x="373.0 382.0 391.0" y="178" fill="#d6d9e5">92%</text>
-    <g transform="translate(409.8 166.0) scale(0.5625)" fill="none" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#8a8a8a"><polyline points="5.5,3 18.5,3"/><polyline points="5.5,21 18.5,21"/><polyline points="7.5,3 7.5,6.8 12,12 7.5,17.2 7.5,21"/><polyline points="16.5,3 16.5,6.8 12,12 16.5,17.2 16.5,21"/></g>
-    <text x="427.0 436.0 445.0 454.0 463.0" y="178" fill="#d6d9e5">2h14m</text>
-    <text x="481.0" y="178" fill="#8a8a8a">│</text>
-    <text x="499.0 508.0" y="178" fill="#d6d9e5">7d</text>
-    <text x="526.0 535.0 544.0 553.0 562.0" y="178" fill="#ff0000">█████</text>
-    <text x="571.0" y="178" fill="#8a8a8a">░</text>
-    <text x="589.0 598.0 607.0" y="178" fill="#d6d9e5">88%</text>
-    <g transform="translate(625.8 166.0) scale(0.5625)" fill="none" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#8a8a8a"><polyline points="5.5,3 18.5,3"/><polyline points="5.5,21 18.5,21"/><polyline points="7.5,3 7.5,6.8 12,12 7.5,17.2 7.5,21"/><polyline points="16.5,3 16.5,6.8 12,12 16.5,17.2 16.5,21"/></g>
-    <text x="643.0 652.0 661.0 670.0" y="178" fill="#d6d9e5">3d5h</text>
-    <text x="688.0" y="178" fill="#8a8a8a">│</text>
-    <g transform="translate(706.8 166.0) scale(0.5625)" fill="none" stroke="#5fafff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fafff"><polyline points="2.8,12 21.2,12"/><polyline points="7.4,4.03 16.6,19.97"/><polyline points="16.6,4.03 7.4,19.97"/><polyline points="17.34,12 19.13,9.44"/><polyline points="17.34,12 19.13,14.56"/><polyline points="14.67,16.62 17.78,16.89"/><polyline points="14.67,16.62 13.35,19.46"/><polyline points="9.33,16.62 10.65,19.46"/><polyline points="9.33,16.62 6.22,16.89"/><polyline points="6.66,12 4.87,14.56"/><polyline points="6.66,12 4.87,9.44"/><polyline points="9.33,7.38 6.22,7.11"/><polyline points="9.33,7.38 10.65,4.54"/><polyline points="14.67,7.38 13.35,4.54"/><polyline points="14.67,7.38 17.78,7.11"/></g>
-    <text x="724.0 733.0 742.0 751.0" y="178" fill="#ff8700">cold</text>
+    <g transform="translate(22.8 102.0) scale(0.5625)" fill="none" stroke="#87afd7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#87afd7"><polygon points="3,6 9,6 11.4,8.8 21,8.8 21,19 3,19"/></g>
+    <text x="40.0 49.0 58.0 67.0 76.0 85.0 94.0 103.0 112.0 121.0 130.0" y="114" fill="#d6d9e5">acme/my-app</text>
+    <g transform="translate(148.8 102.0) scale(0.5625)" fill="none" stroke="#87d787" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#87d787"><circle cx="6" cy="5" r="2.2"/><circle cx="6" cy="19" r="2.2"/><circle cx="18" cy="7" r="2.2"/><polyline points="6,7.2 6,16.8"/><path d="M18 9.2 C18 14.5 6 11 6 14.5"/></g>
+    <text x="166.0 175.0 184.0 193.0 202.0 211.0 220.0" y="114" fill="#d6d9e5">main*↑1</text>
+    <text x="238.0" y="114" fill="#8a8a8a">│</text>
+    <g transform="translate(256.8 102.0) scale(0.5625)" fill="none" stroke="#d7af5f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#d7af5f"><path d="M12 6.2 C10 4.4 6.5 4 3 4.6 C3 9.2 3 13.8 3 18.4 C6.5 17.9 10 18.3 12 20"/><path d="M12 6.2 C14 4.4 17.5 4 21 4.6 C21 9.2 21 13.8 21 18.4 C17.5 17.9 14 18.3 12 20"/><polyline points="12,6.2 12,20"/></g>
+    <text x="274.0 283.0 292.0 301.0 310.0" y="114" fill="#d6d9e5">brain</text>
+    <text x="328.0" y="114" fill="#5faf5f">●</text>
+    <text x="346.0" y="114" fill="#8a8a8a">│</text>
+    <g transform="translate(364.8 102.0) scale(0.5625)" fill="none" stroke="#d7af5f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#d7af5f"><polygon points="6,3 14,3 19,8 19,21 6,21"/><polyline points="14,3 14,8 19,8"/><polyline points="9.5,13 15.5,13"/><polyline points="9.5,17 15.5,17"/></g>
+    <text x="382.0 391.0 400.0 409.0 418.0 427.0 436.0 445.0 454.0 463.0 472.0 481.0 490.0 499.0 508.0 517.0 526.0 535.0 544.0 553.0 562.0 571.0 580.0 589.0 598.0 607.0 616.0 625.0 634.0" y="114" fill="#d6d9e5">sessions/hud-notes-2026-10-07</text>
+    <text x="652.0 661.0" y="114" fill="#8a8a8a">+2</text>
   </g>
-  <text x="22" y="210" fill="#6c7086" font-size="12" font-family="system-ui, sans-serif">Without the icon font: "icons": "emoji" (the default)</text>
+  <text x="22" y="146" fill="#6c7086" font-size="12" font-family="system-ui, sans-serif">Same icons under pressure: context hint, hot limits, cold cache, month against a 160h target</text>
   <g>
-    <text x="22.0" y="242" fill="#d6d9e5">⚡</text>
-    <text x="49.0 58.0 67.0 76.0 85.0 94.0" y="242" fill="#d6d9e5" font-weight="700">Sonnet</text>
-    <text x="112.0 121.0 130.0" y="242" fill="#d6d9e5" font-weight="700">5.5</text>
-    <text x="139.0 148.0 157.0 166.0 175.0" y="242" fill="#8a8a8a">·high</text>
-    <text x="193.0" y="242" fill="#8a8a8a">│</text>
-    <text x="211.0" y="242" fill="#d6d9e5">📁</text>
-    <text x="238.0 247.0 256.0 265.0 274.0 283.0" y="242" fill="#d6d9e5">my-app</text>
-    <text x="301.0" y="242" fill="#d6d9e5">🌿</text>
-    <text x="328.0 337.0 346.0 355.0 364.0 373.0 382.0" y="242" fill="#d6d9e5">main*↑1</text>
-    <text x="400.0" y="242" fill="#8a8a8a">│</text>
-    <text x="418.0" y="242" fill="#d6d9e5">⏱</text>
-    <text x="445.0 454.0 463.0 472.0 481.0" y="242" fill="#d6d9e5">1h23m</text>
-    <text x="499.0" y="242" fill="#8a8a8a">│</text>
-    <text x="517.0" y="242" fill="#d6d9e5">📅</text>
-    <text x="544.0 553.0 562.0 571.0 580.0" y="242" fill="#d6d9e5">3h40m</text>
-    <text x="598.0" y="242" fill="#8a8a8a">│</text>
-    <text x="616.0" y="242" fill="#d6d9e5">🕐</text>
-    <text x="643.0 652.0 661.0 670.0 679.0" y="242" fill="#d6d9e5">2h10m</text>
-    <text x="697.0" y="242" fill="#8a8a8a">│</text>
-    <text x="715.0" y="242" fill="#d6d9e5">📆</text>
-    <text x="742.0 751.0 760.0 769.0 778.0 787.0" y="242" fill="#d6d9e5">15h04m</text>
+    <g transform="translate(22.8 166.0) scale(0.5625)" fill="none" stroke="#af87ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#af87ff"><polygon points="10.5,5 12.66,11.34 19,13.5 12.66,15.66 10.5,22 8.34,15.66 2,13.5 8.34,11.34" fill="currentColor" stroke-width="1.4"/><polygon points="18.6,1.8 19.52,4.48 22.2,5.4 19.52,6.32 18.6,9 17.68,6.32 15,5.4 17.68,4.48" fill="currentColor" stroke-width="1"/></g>
+    <text x="40.0 49.0 58.0 67.0 76.0 85.0" y="178" fill="#d6d9e5" font-weight="700">Sonnet</text>
+    <text x="103.0 112.0 121.0" y="178" fill="#d6d9e5" font-weight="700">5.5</text>
+    <text x="130.0 139.0 148.0 157.0 166.0" y="178" fill="#8a8a8a">·high</text>
+    <text x="184.0" y="178" fill="#8a8a8a">│</text>
+    <g transform="translate(202.8 166.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><polyline points="2,12 7,12 10,4.5 14,19.5 17,12 22,12"/></g>
+    <text x="220.0 229.0 238.0 247.0 256.0" y="178" fill="#d6d9e5">1h23m</text>
+    <text x="274.0" y="178" fill="#8a8a8a">│</text>
+    <g transform="translate(292.8 166.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><rect x="3" y="5" width="18" height="16" rx="2.5"/><polyline points="3,10 21,10"/><polyline points="8,2.8 8,6.8"/><polyline points="16,2.8 16,6.8"/><circle cx="12" cy="15.6" r="2" fill="currentColor" stroke="none"/></g>
+    <text x="310.0 319.0 328.0 337.0 346.0" y="178" fill="#d6d9e5">3h40m</text>
+    <text x="364.0" y="178" fill="#8a8a8a">│</text>
+    <g transform="translate(382.8 166.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><circle cx="12" cy="12" r="9"/><polyline points="12,6.5 12,12 16,14.5"/></g>
+    <text x="400.0 409.0 418.0 427.0 436.0" y="178" fill="#d6d9e5">2h10m</text>
+    <text x="454.0" y="178" fill="#8a8a8a">│</text>
+    <g transform="translate(472.8 166.0) scale(0.5625)" fill="none" stroke="#5fd7d7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fd7d7"><rect x="3" y="5" width="18" height="16" rx="2.5"/><polyline points="3,10 21,10"/><polyline points="8,2.8 8,6.8"/><polyline points="16,2.8 16,6.8"/><circle cx="8" cy="13.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="12" cy="13.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="16" cy="13.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="8" cy="17.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="12" cy="17.8" r="1.25" fill="currentColor" stroke="none"/><circle cx="16" cy="17.8" r="1.25" fill="currentColor" stroke="none"/></g>
+    <text x="490.0 499.0 508.0 517.0 526.0 535.0" y="178" fill="#5faf5f">15h04m</text>
+    <text x="544.0 553.0 562.0 571.0 580.0" y="178" fill="#8a8a8a">/160h</text>
   </g>
   <g>
-    <text x="22.0" y="266" fill="#d6d9e5">🔋</text>
-    <text x="49.0 58.0 67.0" y="266" fill="#d6d9e5">ctx</text>
-    <text x="85.0 94.0 103.0" y="266" fill="#5faf5f">███</text>
-    <text x="112.0 121.0 130.0" y="266" fill="#8a8a8a">░░░</text>
-    <text x="148.0 157.0 166.0" y="266" fill="#d6d9e5">42%</text>
-    <text x="184.0" y="266" fill="#8a8a8a">│</text>
-    <text x="202.0 211.0" y="266" fill="#d6d9e5">5h</text>
-    <text x="229.0 238.0 247.0 256.0" y="266" fill="#ff8700">████</text>
-    <text x="265.0 274.0" y="266" fill="#8a8a8a">░░</text>
-    <text x="292.0 301.0 310.0" y="266" fill="#d6d9e5">63%</text>
-    <text x="328.0" y="266" fill="#d6d9e5">⏳</text>
-    <text x="346.0 355.0 364.0 373.0 382.0" y="266" fill="#d6d9e5">2h14m</text>
-    <text x="400.0" y="266" fill="#8a8a8a">│</text>
-    <text x="418.0 427.0" y="266" fill="#d6d9e5">7d</text>
-    <text x="445.0 454.0 463.0 472.0 481.0" y="266" fill="#ff8700">█████</text>
-    <text x="490.0" y="266" fill="#8a8a8a">░</text>
-    <text x="508.0 517.0 526.0" y="266" fill="#d6d9e5">78%</text>
-    <text x="544.0" y="266" fill="#d6d9e5">⏳</text>
-    <text x="562.0 571.0 580.0 589.0" y="266" fill="#d6d9e5">3d5h</text>
-    <text x="607.0" y="266" fill="#8a8a8a">│</text>
-    <text x="625.0 634.0 643.0 652.0 661.0" y="266" fill="#8a8a8a">cache</text>
-    <text x="679.0 688.0 697.0" y="266" fill="#8a8a8a">54m</text>
-    <text x="715.0" y="266" fill="#8a8a8a">│</text>
-    <text x="733.0" y="266" fill="#d6d9e5">📂</text>
-    <text x="760.0 769.0 778.0 787.0 796.0 805.0 814.0 823.0 832.0 841.0 850.0 859.0 868.0 877.0 886.0" y="266" fill="#d6d9e5">sessions/hud-n…</text>
-    <text x="904.0 913.0" y="266" fill="#8a8a8a">+2</text>
-  </g>
-  <text x="22" y="298" fill="#6c7086" font-size="12" font-family="system-ui, sans-serif">"icons": "plain", "layout": "rows" (three rows)</text>
-  <g>
-    <text x="22.0 31.0 40.0 49.0 58.0 67.0" y="330" fill="#d6d9e5" font-weight="700">Sonnet</text>
-    <text x="85.0 94.0 103.0" y="330" fill="#d6d9e5" font-weight="700">5.5</text>
-    <text x="112.0 121.0 130.0 139.0 148.0" y="330" fill="#8a8a8a">·high</text>
-    <text x="166.0" y="330" fill="#8a8a8a">│</text>
-    <text x="184.0 193.0 202.0 211.0 220.0 229.0 238.0" y="330" fill="#d6d9e5">session</text>
-    <text x="256.0 265.0 274.0 283.0 292.0" y="330" fill="#d6d9e5">1h23m</text>
-    <text x="310.0" y="330" fill="#8a8a8a">│</text>
-    <text x="328.0 337.0 346.0 355.0" y="330" fill="#d6d9e5">open</text>
-    <text x="373.0 382.0 391.0 400.0 409.0" y="330" fill="#d6d9e5">2h10m</text>
-    <text x="427.0" y="330" fill="#8a8a8a">│</text>
-    <text x="445.0 454.0 463.0 472.0 481.0" y="330" fill="#d6d9e5">today</text>
-    <text x="499.0 508.0 517.0 526.0 535.0" y="330" fill="#d6d9e5">3h40m</text>
-    <text x="553.0" y="330" fill="#8a8a8a">│</text>
-    <text x="571.0 580.0 589.0 598.0 607.0" y="330" fill="#d6d9e5">month</text>
-    <text x="625.0 634.0 643.0 652.0 661.0 670.0" y="330" fill="#d6d9e5">15h04m</text>
+    <g transform="translate(22.8 190.0) scale(0.5625)" fill="none" stroke="#87d787" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#87d787"><rect x="6" y="6" width="12" height="12" rx="1.8"/><polyline points="9.5,2.6 9.5,6"/><polyline points="14.5,2.6 14.5,6"/><polyline points="9.5,18 9.5,21.4"/><polyline points="14.5,18 14.5,21.4"/><polyline points="2.6,9.5 6,9.5"/><polyline points="2.6,14.5 6,14.5"/><polyline points="18,9.5 21.4,9.5"/><polyline points="18,14.5 21.4,14.5"/></g>
+    <text x="40.0 49.0 58.0" y="202" fill="#d6d9e5">ctx</text>
+    <text x="76.0 85.0 94.0 103.0 112.0" y="202" fill="#ff0000">█████</text>
+    <text x="121.0" y="202" fill="#8a8a8a">░</text>
+    <text x="139.0 148.0 157.0" y="202" fill="#d6d9e5">91%</text>
+    <text x="175.0 184.0 193.0 202.0 211.0 220.0 229.0 238.0 247.0" y="202" fill="#ff8700">/compact?</text>
+    <text x="265.0" y="202" fill="#8a8a8a">│</text>
+    <text x="283.0 292.0" y="202" fill="#d6d9e5">5h</text>
+    <text x="310.0 319.0 328.0 337.0 346.0 355.0" y="202" fill="#ff0000">██████</text>
+    <text x="373.0 382.0 391.0" y="202" fill="#d6d9e5">92%</text>
+    <g transform="translate(409.8 190.0) scale(0.5625)" fill="none" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#8a8a8a"><polyline points="5.5,3 18.5,3"/><polyline points="5.5,21 18.5,21"/><polyline points="7.5,3 7.5,6.8 12,12 7.5,17.2 7.5,21"/><polyline points="16.5,3 16.5,6.8 12,12 16.5,17.2 16.5,21"/></g>
+    <text x="427.0 436.0 445.0 454.0 463.0" y="202" fill="#d6d9e5">2h14m</text>
+    <text x="481.0" y="202" fill="#8a8a8a">│</text>
+    <text x="499.0 508.0" y="202" fill="#d6d9e5">7d</text>
+    <text x="526.0 535.0 544.0 553.0 562.0" y="202" fill="#ff0000">█████</text>
+    <text x="571.0" y="202" fill="#8a8a8a">░</text>
+    <text x="589.0 598.0 607.0" y="202" fill="#d6d9e5">88%</text>
+    <g transform="translate(625.8 190.0) scale(0.5625)" fill="none" stroke="#8a8a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#8a8a8a"><polyline points="5.5,3 18.5,3"/><polyline points="5.5,21 18.5,21"/><polyline points="7.5,3 7.5,6.8 12,12 7.5,17.2 7.5,21"/><polyline points="16.5,3 16.5,6.8 12,12 16.5,17.2 16.5,21"/></g>
+    <text x="643.0 652.0 661.0 670.0" y="202" fill="#d6d9e5">3d5h</text>
+    <text x="688.0" y="202" fill="#8a8a8a">│</text>
+    <g transform="translate(706.8 190.0) scale(0.5625)" fill="none" stroke="#5fafff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#5fafff"><polyline points="2.8,12 21.2,12"/><polyline points="7.4,4.03 16.6,19.97"/><polyline points="16.6,4.03 7.4,19.97"/><polyline points="17.34,12 19.13,9.44"/><polyline points="17.34,12 19.13,14.56"/><polyline points="14.67,16.62 17.78,16.89"/><polyline points="14.67,16.62 13.35,19.46"/><polyline points="9.33,16.62 10.65,19.46"/><polyline points="9.33,16.62 6.22,16.89"/><polyline points="6.66,12 4.87,14.56"/><polyline points="6.66,12 4.87,9.44"/><polyline points="9.33,7.38 6.22,7.11"/><polyline points="9.33,7.38 10.65,4.54"/><polyline points="14.67,7.38 13.35,4.54"/><polyline points="14.67,7.38 17.78,7.11"/></g>
+    <text x="724.0 733.0 742.0 751.0" y="202" fill="#ff8700">cold</text>
   </g>
   <g>
-    <text x="22.0 31.0 40.0" y="354" fill="#d6d9e5">ctx</text>
-    <text x="58.0 67.0 76.0" y="354" fill="#5faf5f">███</text>
-    <text x="85.0 94.0 103.0" y="354" fill="#8a8a8a">░░░</text>
-    <text x="121.0 130.0 139.0" y="354" fill="#d6d9e5">42%</text>
-    <text x="157.0" y="354" fill="#8a8a8a">│</text>
-    <text x="175.0 184.0" y="354" fill="#d6d9e5">5h</text>
-    <text x="202.0 211.0 220.0 229.0" y="354" fill="#ff8700">████</text>
-    <text x="238.0 247.0" y="354" fill="#8a8a8a">░░</text>
-    <text x="265.0 274.0 283.0" y="354" fill="#d6d9e5">63%</text>
-    <text x="301.0 310.0 319.0 328.0 337.0" y="354" fill="#d6d9e5">reset</text>
-    <text x="355.0 364.0 373.0 382.0 391.0" y="354" fill="#d6d9e5">2h14m</text>
-    <text x="409.0" y="354" fill="#8a8a8a">│</text>
-    <text x="427.0 436.0" y="354" fill="#d6d9e5">7d</text>
-    <text x="454.0 463.0 472.0 481.0 490.0" y="354" fill="#ff8700">█████</text>
-    <text x="499.0" y="354" fill="#8a8a8a">░</text>
-    <text x="517.0 526.0 535.0" y="354" fill="#d6d9e5">78%</text>
-    <text x="553.0 562.0 571.0 580.0 589.0" y="354" fill="#d6d9e5">reset</text>
-    <text x="607.0 616.0 625.0 634.0" y="354" fill="#d6d9e5">3d5h</text>
-    <text x="652.0" y="354" fill="#8a8a8a">│</text>
-    <text x="670.0 679.0 688.0 697.0 706.0" y="354" fill="#8a8a8a">cache</text>
-    <text x="724.0 733.0 742.0" y="354" fill="#8a8a8a">54m</text>
+    <g transform="translate(22.8 214.0) scale(0.5625)" fill="none" stroke="#87afd7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#87afd7"><polygon points="3,6 9,6 11.4,8.8 21,8.8 21,19 3,19"/></g>
+    <text x="40.0 49.0 58.0 67.0 76.0 85.0 94.0 103.0 112.0 121.0 130.0" y="226" fill="#d6d9e5">acme/my-app</text>
+    <g transform="translate(148.8 214.0) scale(0.5625)" fill="none" stroke="#87d787" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" color="#87d787"><circle cx="6" cy="5" r="2.2"/><circle cx="6" cy="19" r="2.2"/><circle cx="18" cy="7" r="2.2"/><polyline points="6,7.2 6,16.8"/><path d="M18 9.2 C18 14.5 6 11 6 14.5"/></g>
+    <text x="166.0 175.0 184.0 193.0 202.0 211.0 220.0 229.0 238.0 247.0 256.0 265.0 274.0 283.0 292.0" y="226" fill="#d6d9e5">feature/login↓2</text>
+  </g>
+  <text x="22" y="258" fill="#6c7086" font-size="12" font-family="system-ui, sans-serif">Without the icon font: "icons": "emoji" (the default)</text>
+  <g>
+    <text x="22.0" y="290" fill="#d6d9e5">⚡</text>
+    <text x="49.0 58.0 67.0 76.0 85.0 94.0" y="290" fill="#d6d9e5" font-weight="700">Sonnet</text>
+    <text x="112.0 121.0 130.0" y="290" fill="#d6d9e5" font-weight="700">5.5</text>
+    <text x="139.0 148.0 157.0 166.0 175.0" y="290" fill="#8a8a8a">·high</text>
+    <text x="193.0" y="290" fill="#8a8a8a">│</text>
+    <text x="211.0" y="290" fill="#d6d9e5">⏱</text>
+    <text x="238.0 247.0 256.0 265.0 274.0" y="290" fill="#d6d9e5">1h23m</text>
+    <text x="292.0" y="290" fill="#8a8a8a">│</text>
+    <text x="310.0" y="290" fill="#d6d9e5">📅</text>
+    <text x="337.0 346.0 355.0 364.0 373.0" y="290" fill="#d6d9e5">3h40m</text>
+    <text x="391.0" y="290" fill="#8a8a8a">│</text>
+    <text x="409.0" y="290" fill="#d6d9e5">🕐</text>
+    <text x="436.0 445.0 454.0 463.0 472.0" y="290" fill="#d6d9e5">2h10m</text>
+    <text x="490.0" y="290" fill="#8a8a8a">│</text>
+    <text x="508.0" y="290" fill="#d6d9e5">📆</text>
+    <text x="535.0 544.0 553.0 562.0 571.0 580.0" y="290" fill="#d6d9e5">15h04m</text>
   </g>
   <g>
-    <text x="22.0 31.0 40.0 49.0 58.0 67.0" y="378" fill="#d6d9e5">my-app</text>
-    <text x="85.0" y="378" fill="#d6d9e5">→</text>
-    <text x="103.0 112.0 121.0 130.0 139.0 148.0 157.0" y="378" fill="#d6d9e5">main*↑1</text>
-    <text x="175.0" y="378" fill="#8a8a8a">│</text>
-    <text x="193.0 202.0 211.0 220.0 229.0" y="378" fill="#d6d9e5">brain</text>
-    <text x="247.0 256.0 265.0 274.0 283.0 292.0 301.0 310.0 319.0 328.0 337.0 346.0 355.0 364.0 373.0 382.0 391.0 400.0 409.0 418.0 427.0 436.0 445.0 454.0 463.0 472.0 481.0 490.0 499.0" y="378" fill="#d6d9e5">sessions/hud-notes-2026-10-07</text>
-    <text x="517.0 526.0" y="378" fill="#8a8a8a">+2</text>
+    <text x="22.0" y="314" fill="#d6d9e5">🔋</text>
+    <text x="49.0 58.0 67.0" y="314" fill="#d6d9e5">ctx</text>
+    <text x="85.0 94.0 103.0" y="314" fill="#5faf5f">███</text>
+    <text x="112.0 121.0 130.0" y="314" fill="#8a8a8a">░░░</text>
+    <text x="148.0 157.0 166.0" y="314" fill="#d6d9e5">42%</text>
+    <text x="184.0" y="314" fill="#8a8a8a">│</text>
+    <text x="202.0 211.0" y="314" fill="#d6d9e5">5h</text>
+    <text x="229.0 238.0 247.0 256.0" y="314" fill="#ff8700">████</text>
+    <text x="265.0 274.0" y="314" fill="#8a8a8a">░░</text>
+    <text x="292.0 301.0 310.0" y="314" fill="#d6d9e5">63%</text>
+    <text x="328.0" y="314" fill="#d6d9e5">⏳</text>
+    <text x="346.0 355.0 364.0 373.0 382.0" y="314" fill="#d6d9e5">2h14m</text>
+    <text x="400.0" y="314" fill="#8a8a8a">│</text>
+    <text x="418.0 427.0" y="314" fill="#d6d9e5">7d</text>
+    <text x="445.0 454.0 463.0 472.0 481.0" y="314" fill="#ff8700">█████</text>
+    <text x="490.0" y="314" fill="#8a8a8a">░</text>
+    <text x="508.0 517.0 526.0" y="314" fill="#d6d9e5">78%</text>
+    <text x="544.0" y="314" fill="#d6d9e5">⏳</text>
+    <text x="562.0 571.0 580.0 589.0" y="314" fill="#d6d9e5">3d5h</text>
+    <text x="607.0" y="314" fill="#8a8a8a">│</text>
+    <text x="625.0 634.0 643.0 652.0 661.0" y="314" fill="#8a8a8a">cache</text>
+    <text x="679.0 688.0 697.0" y="314" fill="#8a8a8a">54m</text>
+  </g>
+  <g>
+    <text x="22.0" y="338" fill="#d6d9e5">📁</text>
+    <text x="49.0 58.0 67.0 76.0 85.0 94.0 103.0 112.0 121.0 130.0 139.0" y="338" fill="#d6d9e5">acme/my-app</text>
+    <text x="157.0" y="338" fill="#d6d9e5">🌿</text>
+    <text x="184.0 193.0 202.0 211.0 220.0 229.0 238.0" y="338" fill="#d6d9e5">main*↑1</text>
+    <text x="256.0" y="338" fill="#8a8a8a">│</text>
+    <text x="274.0" y="338" fill="#d6d9e5">🧠</text>
+    <text x="301.0 310.0 319.0 328.0 337.0" y="338" fill="#d6d9e5">brain</text>
+    <text x="355.0" y="338" fill="#5faf5f">●</text>
+    <text x="373.0" y="338" fill="#8a8a8a">│</text>
+    <text x="391.0" y="338" fill="#d6d9e5">📂</text>
+    <text x="418.0 427.0 436.0 445.0 454.0 463.0 472.0 481.0 490.0 499.0 508.0 517.0 526.0 535.0 544.0 553.0 562.0 571.0 580.0 589.0 598.0 607.0 616.0 625.0 634.0 643.0 652.0 661.0 670.0" y="338" fill="#d6d9e5">sessions/hud-notes-2026-10-07</text>
+    <text x="688.0 697.0" y="338" fill="#8a8a8a">+2</text>
+  </g>
+  <text x="22" y="370" fill="#6c7086" font-size="12" font-family="system-ui, sans-serif">"icons": "plain", "layout": "compact" (two rows)</text>
+  <g>
+    <text x="22.0 31.0 40.0 49.0 58.0 67.0" y="402" fill="#d6d9e5" font-weight="700">Sonnet</text>
+    <text x="85.0 94.0 103.0" y="402" fill="#d6d9e5" font-weight="700">5.5</text>
+    <text x="112.0 121.0 130.0 139.0 148.0" y="402" fill="#8a8a8a">·high</text>
+    <text x="166.0" y="402" fill="#8a8a8a">│</text>
+    <text x="184.0 193.0 202.0 211.0 220.0 229.0 238.0 247.0 256.0 265.0 274.0" y="402" fill="#d6d9e5">acme/my-app</text>
+    <text x="292.0" y="402" fill="#d6d9e5">→</text>
+    <text x="310.0 319.0 328.0 337.0 346.0 355.0 364.0" y="402" fill="#d6d9e5">main*↑1</text>
+    <text x="382.0" y="402" fill="#8a8a8a">│</text>
+    <text x="400.0 409.0 418.0 427.0 436.0 445.0 454.0" y="402" fill="#d6d9e5">session</text>
+    <text x="472.0 481.0 490.0 499.0 508.0" y="402" fill="#d6d9e5">1h23m</text>
+    <text x="526.0" y="402" fill="#8a8a8a">│</text>
+    <text x="544.0 553.0 562.0 571.0 580.0" y="402" fill="#d6d9e5">today</text>
+    <text x="598.0 607.0 616.0 625.0 634.0" y="402" fill="#d6d9e5">3h40m</text>
+    <text x="652.0" y="402" fill="#8a8a8a">│</text>
+    <text x="670.0 679.0 688.0 697.0" y="402" fill="#d6d9e5">open</text>
+    <text x="715.0 724.0 733.0 742.0 751.0" y="402" fill="#d6d9e5">2h10m</text>
+    <text x="769.0" y="402" fill="#8a8a8a">│</text>
+    <text x="787.0 796.0 805.0 814.0 823.0" y="402" fill="#d6d9e5">month</text>
+    <text x="841.0 850.0 859.0 868.0 877.0 886.0" y="402" fill="#d6d9e5">15h04m</text>
+  </g>
+  <g>
+    <text x="22.0 31.0 40.0" y="426" fill="#d6d9e5">ctx</text>
+    <text x="58.0 67.0 76.0" y="426" fill="#5faf5f">███</text>
+    <text x="85.0 94.0 103.0" y="426" fill="#8a8a8a">░░░</text>
+    <text x="121.0 130.0 139.0" y="426" fill="#d6d9e5">42%</text>
+    <text x="157.0" y="426" fill="#8a8a8a">│</text>
+    <text x="175.0 184.0" y="426" fill="#d6d9e5">5h</text>
+    <text x="202.0 211.0 220.0 229.0" y="426" fill="#ff8700">████</text>
+    <text x="238.0 247.0" y="426" fill="#8a8a8a">░░</text>
+    <text x="265.0 274.0 283.0" y="426" fill="#d6d9e5">63%</text>
+    <text x="301.0 310.0 319.0 328.0 337.0" y="426" fill="#d6d9e5">reset</text>
+    <text x="355.0 364.0 373.0 382.0 391.0" y="426" fill="#d6d9e5">2h14m</text>
+    <text x="409.0" y="426" fill="#8a8a8a">│</text>
+    <text x="427.0 436.0" y="426" fill="#d6d9e5">7d</text>
+    <text x="454.0 463.0 472.0 481.0 490.0" y="426" fill="#ff8700">█████</text>
+    <text x="499.0" y="426" fill="#8a8a8a">░</text>
+    <text x="517.0 526.0 535.0" y="426" fill="#d6d9e5">78%</text>
+    <text x="553.0 562.0 571.0 580.0 589.0" y="426" fill="#d6d9e5">reset</text>
+    <text x="607.0 616.0 625.0 634.0" y="426" fill="#d6d9e5">3d5h</text>
+    <text x="652.0" y="426" fill="#8a8a8a">│</text>
+    <text x="670.0 679.0 688.0 697.0 706.0" y="426" fill="#8a8a8a">cache</text>
+    <text x="724.0 733.0 742.0" y="426" fill="#8a8a8a">54m</text>
   </g>
   </g>
 </svg>
