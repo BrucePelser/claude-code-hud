@@ -11,7 +11,9 @@ from xml.sax.saxutils import escape
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 sys.path.insert(0, ROOT)
 import hud  # noqa: E402
+from icons import design  # noqa: E402
 
+GLYPH_NAMES = {chr(cp): name for name, cp in design.CODEPOINTS.items()}
 CELL_W, LINE_H, FONT = 9.0, 24, 15
 PAD_X, PAD_TOP = 22, 20
 BG, FG, MUTED = "#1b1d27", "#d6d9e5", "#6c7086"
@@ -36,6 +38,15 @@ def cells(ch):
     return hud.vis_len(ch)
 
 
+def icon_group(name, x, baseline, color):
+    """Draw an icon where the font would put it: 0.9em tall, centred 0.35em above the baseline."""
+    size = 0.9 * FONT
+    top = baseline - 0.35 * FONT - size / 2
+    return ('<g transform="translate(%.1f %.1f) scale(%.4f)" fill="none" stroke="%s" stroke-width="%g" '
+            'stroke-linecap="round" stroke-linejoin="round" color="%s">%s</g>'
+            % (x + 0.05 * FONT, top, size / 24.0, color, design.STROKE, color, design.svg_elements(name)))
+
+
 def line_to_svg(text, y):
     """One terminal line to <text> elements, each glyph pinned to its own cell column."""
     out, col, color, bold = [], 0, FG, False
@@ -56,6 +67,11 @@ def line_to_svg(text, y):
             x = PAD_X + col * CELL_W
             if ch == " ":
                 flush()  # SVG collapses spaces and shifts the x list, so spaces are just column advances
+                col += 1
+                continue
+            if ch in GLYPH_NAMES:
+                flush()
+                out.append(icon_group(GLYPH_NAMES[ch], x, y, color))
                 col += 1
                 continue
             if ord(ch) > 0xFFFF or cells(ch) == 2:
@@ -79,26 +95,30 @@ def line_to_svg(text, y):
     return "\n    ".join(out), col
 
 
+def config(**over):
+    cfg = hud.make_config(over)
+    cfg["color"] = True
+    return cfg
+
+
 def frames():
-    base = hud._merge(hud.DEFAULTS, {})
-    base["color"] = True
-    plain = hud._merge(base, {"icons": "plain"})
     pressure_data = hud.demo_data()
     pressure_data["context_window"]["used_percentage"] = 91
     pressure_data["rate_limits"]["five_hour"]["used_percentage"] = 92
     pressure_data["rate_limits"]["seven_day"]["used_percentage"] = 88
     pressure_data["prompt_cache"] = {"warm": False, "caching_observed": True, "expires_at": None}
     pressure_state = dict(hud.DEMO_STATE, git={"branch": "feature/login", "dirty": False, "ahead": 0, "behind": 2})
-    target = hud._merge(base, {"monthly_target_hours": 160, "max_width": 120})
     brain_state = dict(hud.DEMO_STATE, brain={"files": [
         "plans/launch/plan.md", "reference/style-guide.md", "sessions/hud-notes-2026-10-07.md"]})
     return [
-        ("Default", hud.render(hud.demo_data(), base, hud.DEMO_STATE)),
-        ("Under pressure, with a 160h monthly target (max_width 120)",
-         hud.render(pressure_data, target, pressure_state)),
-        ('With "brain_path" set: line 3 shows the newest brain file and how many others',
-         hud.render(hud.demo_data(), base, brain_state)),
-        ('"icons": "plain"', hud.render(hud.demo_data(), plain, hud.DEMO_STATE)),
+        ('icons "custom" with a brain_path set. Row 1: you. Row 2: limits. Row 3: place.',
+         hud.render(hud.demo_data(), config(icons="custom"), brain_state)),
+        ("Same icons under pressure: context hint, hot limits, cold cache, month against a 160h target",
+         hud.render(pressure_data, config(icons="custom", monthly_target_hours=160), pressure_state)),
+        ('Without the icon font: "icons": "emoji" (the default)',
+         hud.render(hud.demo_data(), config(), brain_state)),
+        ('"icons": "plain", "layout": "compact"',
+         hud.render(hud.demo_data(), config(icons="plain", layout="compact"), hud.DEMO_STATE)),
     ]
 
 

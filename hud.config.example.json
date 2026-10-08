@@ -1,9 +1,7 @@
 {
   "icons": "emoji",
+  "layout": "rows",
   "max_width": 100,
-  "line1": ["model", "session", "elapsed", "where", "today", "month"],
-  "line2": ["context", "five_hour", "seven_day", "cache"],
-  "line3": ["brain"],
   "brain_path": null,
   "brain_max_len": 44,
   "brain_window_kb": 4096,
@@ -15,5 +13,9 @@
   "idle_cap_minutes": 10,
   "git": true,
   "colors": { "ok": 71, "warn": 208, "bad": 196, "dim": 245, "add": 71, "del": 196 },
+  "icon_colors": {
+    "model": 141, "time": 80, "cost": 222, "folder": 110, "branch": 114, "brain": 179,
+    "context": 114, "cache_warm": 208, "cache_cold": 75, "dim": 245
+  },
   "thresholds": { "warn": 60, "bad": 85 }
 }

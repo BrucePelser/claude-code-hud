@@ -17,14 +17,15 @@ import time
 import unicodedata
 from datetime import datetime
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 DEFAULTS = {
-    "icons": "emoji",  # "emoji" or "plain"
+    "icons": "emoji",  # "emoji", "custom" (needs fonts/ClaudeHudIcons.ttf installed) or "plain"
+    "layout": "rows",  # "rows" is three themed rows, "compact" is two
     "max_width": 100,  # a segment that would push a line past this is skipped
-    "line1": ["model", "session", "elapsed", "where", "today", "month"],
-    "line2": ["context", "five_hour", "seven_day", "cache"],
-    "line3": ["brain"],  # empty, and hidden, until brain_path is set and used
+    "line1": None,  # None means "take it from the layout". A list of segment names overrides it.
+    "line2": None,
+    "line3": None,
     "brain_path": None,  # a folder of notes or docs, e.g. "~/brain"
     "brain_max_len": 44,
     "brain_window_kb": 4096,  # how much recent transcript to scan for brain files
@@ -36,19 +37,45 @@ DEFAULTS = {
     "idle_cap_minutes": 10,  # a gap longer than this counts as this many minutes
     "git": True,
     "colors": {"ok": 71, "warn": 208, "bad": 196, "dim": 245, "add": 71, "del": 196},
+    "icon_colors": {  # only used by the "custom" icon set, which is drawn in these colours
+        "model": 141, "time": 80, "cost": 222, "folder": 110, "branch": 114, "brain": 179,
+        "context": 114, "cache_warm": 208, "cache_cold": 75, "dim": 245,
+    },
     "thresholds": {"warn": 60, "bad": 85},
 }
 
-ICONS = {
-    "model": "\u26a1 ",
-    "session": "\u23f1 ",
-    "today": "\U0001f4c5 ",
-    "month": "\U0001f4c6 ",
-    "cost": "\U0001f4b0 ",
-    "where": "\U0001f4c1 ",
-    "brain": "\U0001f4c2 ",
-    "context": "\U0001f50b ",
-    "reset": "\u23f3",
+LAYOUTS = {
+    "rows": {  # who and when, then limits, then place
+        "line1": ["model", "session", "elapsed", "today", "month"],
+        "line2": ["context", "five_hour", "seven_day", "cache"],
+        "line3": ["where", "brain"],
+    },
+    "compact": {
+        "line1": ["model", "session", "elapsed", "where", "today", "month"],
+        "line2": ["context", "five_hour", "seven_day", "cache"],
+        "line3": ["brain"],
+    },
+}
+
+EMOJI = {
+    "model": "\u26a1 ", "session": "\u23f1 ", "elapsed": "\U0001f550 ", "today": "\U0001f4c5 ",
+    "month": "\U0001f4c6 ", "cost": "\U0001f4b0 ", "where": "\U0001f4c1 ", "branch": "\U0001f33f ",
+    "brain": "\U0001f4c2 ", "context": "\U0001f50b ", "reset": "\u23f3",
+}
+
+# Code points of fonts/ClaudeHudIcons.ttf. A test checks this against icons/design.py.
+GLYPHS = {
+    "model": "\ue900", "active": "\ue901", "open": "\ue902", "today": "\ue903", "month": "\ue904",
+    "cost": "\ue905", "folder": "\ue906", "branch": "\ue907", "note": "\ue908", "book": "\ue909",
+    "context": "\ue90a", "cache_warm": "\ue90b", "cache_cold": "\ue90c", "reset": "\ue90d",
+}
+
+# segment role -> (glyph, colour key in icon_colors)
+CUSTOM_ROLES = {
+    "model": ("model", "model"), "session": ("active", "time"), "elapsed": ("open", "time"),
+    "today": ("today", "time"), "month": ("month", "time"), "cost": ("cost", "cost"),
+    "where": ("folder", "folder"), "branch": ("branch", "branch"), "brain": ("note", "brain"),
+    "context": ("context", "context"), "reset": ("reset", "dim"),
 }
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
@@ -141,11 +168,19 @@ def config_dir(data):
     return os.path.join(os.path.expanduser("~"), ".claude")
 
 
-def load_config(cfg_dir):
-    path = os.environ.get("CLAUDE_HUD_CONFIG") or os.path.join(cfg_dir, "hud.config.json")
-    cfg = _merge(DEFAULTS, read_json(path, {}))
+def make_config(overrides):
+    cfg = _merge(DEFAULTS, overrides)
+    layout = LAYOUTS.get(cfg["layout"], LAYOUTS["rows"])
+    for key in ("line1", "line2", "line3"):
+        if cfg[key] is None:
+            cfg[key] = layout[key]
     cfg["color"] = not os.environ.get("NO_COLOR")
     return cfg
+
+
+def load_config(cfg_dir):
+    path = os.environ.get("CLAUDE_HUD_CONFIG") or os.path.join(cfg_dir, "hud.config.json")
+    return make_config(read_json(path, {}))
 
 
 # ---------------------------------------------------------------- active time
@@ -392,8 +427,15 @@ def bar(cfg, pct):
     return paint(cfg, level_color(cfg, pct), "\u2588" * filled) + dim(cfg, "\u2591" * (width - filled))
 
 
-def icon(cfg, name, plain=""):
-    return ICONS.get(name, "") if cfg["icons"] == "emoji" else plain
+def icon(cfg, role, plain=""):
+    """Icon for a segment role, with its trailing space. `plain` is what the plain set shows instead."""
+    mode = cfg["icons"]
+    if mode == "custom" and role in CUSTOM_ROLES:
+        glyph, color = CUSTOM_ROLES[role]
+        return paint(cfg, cfg["icon_colors"][color], GLYPHS[glyph]) + " "
+    if mode == "emoji":
+        return EMOJI.get(role, "")
+    return plain
 
 
 def pct_of(node):
@@ -429,13 +471,13 @@ def seg_elapsed(d, cfg, st):
     ms = (d.get("cost") or {}).get("total_duration_ms")
     if not isinstance(ms, (int, float)) or ms <= 0:
         return None
-    return "open " + fmt_hm(ms / 60000.0)
+    return icon(cfg, "elapsed", "open ") + fmt_hm(ms / 60000.0)
 
 
 def seg_today(d, cfg, st):
     if st.get("today") is None:
         return None
-    return icon(cfg, "today") + "today " + fmt_hm(st["today"])
+    return icon(cfg, "today", "today ") + fmt_hm(st["today"])
 
 
 def seg_month(d, cfg, st):
@@ -446,7 +488,7 @@ def seg_month(d, cfg, st):
     if target:
         used = paint(cfg, level_color(cfg, st["month"] / (target * 60.0) * 100), text)
         text = used + dim(cfg, "/%gh" % target)
-    return icon(cfg, "month") + "month " + text
+    return icon(cfg, "month", "month ") + text
 
 
 def seg_cost(d, cfg, st):
@@ -474,7 +516,7 @@ def seg_where(d, cfg, st):
     out = icon(cfg, "where") + (os.path.basename(cwd.rstrip("\\/")) or cwd)
     git = st.get("git")
     if git:
-        out += " \u2192 " + git["branch"] + ("*" if git["dirty"] else "")
+        out += " " + icon(cfg, "branch", "\u2192 ") + git["branch"] + ("*" if git["dirty"] else "")
         if git["ahead"]:
             out += "\u2191%d" % git["ahead"]
         if git["behind"]:
@@ -528,7 +570,12 @@ def seg_cache(d, cfg, st):
     if not pc.get("caching_observed", False):
         return None
     left = (pc.get("expires_at") or 0) - time.time()
-    if pc.get("warm") and left > 0:
+    warm = bool(pc.get("warm")) and left > 0
+    if cfg["icons"] == "custom":  # flame while warm, snowflake once it has gone cold
+        key = "cache_warm" if warm else "cache_cold"
+        glyph = paint(cfg, cfg["icon_colors"][key], GLYPHS[key]) + " "
+        return glyph + (dim(cfg, fmt_countdown(left)) if warm else paint(cfg, cfg["colors"]["warn"], "cold"))
+    if warm:
         return dim(cfg, "cache " + fmt_countdown(left))
     return paint(cfg, cfg["colors"]["warn"], "cache cold")
 

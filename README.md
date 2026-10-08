@@ -1,20 +1,26 @@
 # claude-code-hud
 
-A status line for [Claude Code](https://code.claude.com): two lines by default, a third when you point it at a notes folder. One Python file, standard library only, no network calls.
+A status line for [Claude Code](https://code.claude.com). Three rows: you, your limits, where you are. One Python file, standard library only, no network calls.
 
-![Four renderings of the HUD: default, under pressure, with a brain folder, and plain icons](assets/preview.svg)
+![The HUD with the custom icon set, under pressure, with emoji, and as plain text](assets/preview.svg)
 
-Line 1 is about you: model, how long you have worked and how long the session has been open, where you are in git. Line 2 is about limits: context window, 5-hour and 7-day usage, prompt cache timer. Line 3 is optional: which file in your notes folder (a "brain", wiki or docs vault) the session is working in.
+- **Row 1, you:** model and effort, active time, how long the session has been open, time today and this month.
+- **Row 2, limits:** context window, 5-hour and 7-day usage, prompt cache timer.
+- **Row 3, place:** folder and git branch, plus the file in your notes folder (a "brain", wiki or docs vault) that the session is working in.
+
+Want two rows? Set `"layout": "compact"`.
 
 ## What it shows
+
+Each segment has an icon, so there are no labels like "open" or "today" to read. The icons are in the next section.
 
 | Segment | Shows |
 | --- | --- |
 | `model` | Model name, effort level (`high`, `xhi`, ...), `fast` when fast mode is on |
 | `session` | Active time in this session |
-| `elapsed` | How long the session has been open, e.g. `open 2h10m` |
+| `elapsed` | How long the session has been open |
 | `today` | Active time across all sessions today |
-| `month` | Active time this month, with `/160h` style target if you set one |
+| `month` | Active time this month, with a `/160h` style target if you set one |
 | `cost` | Session cost estimate in USD (list price, may differ from your bill) |
 | `lines` | Lines added and removed this session |
 | `name` | Session name, if you set one with `/rename` |
@@ -23,11 +29,41 @@ Line 1 is about you: model, how long you have worked and how long the session ha
 | `context` | Context window bar. Shows a hint once you pass 75% |
 | `five_hour` | 5-hour usage bar and time until reset |
 | `seven_day` | 7-day usage bar. Reset time appears once you pass 70% |
-| `cache` | Time left on the prompt cache, or `cache cold` |
+| `cache` | Time left on the prompt cache, or cold |
 
 Bars turn orange at 60% and red at 85%. A segment hides itself when Claude Code does not send its data. Rate limits only exist for Pro and Max plans, so API users will not see those two bars.
 
-Default layout: `model session elapsed where today month` on line 1, `context five_hour seven_day cache` on line 2, `brain` on line 3. Line 3 stays hidden until you set `brain_path`. `cost`, `lines` and `name` are off until you add them.
+Default rows: `model session elapsed today month` / `context five_hour seven_day cache` / `where brain`. `cost`, `lines` and `name` are off until you add them to a row.
+
+## Icons
+
+![The 14 icons: model, active, open, today, month, cost, folder, branch, note, book, context, cache warm, cache cold, reset](assets/icons.svg)
+
+A terminal cannot draw SVG, so these 14 icons ship twice: as SVG files in [`icons/svg/`](icons/svg) and as glyphs in a small icon font, [`fonts/ClaudeHudIcons.ttf`](fonts/ClaudeHudIcons.ttf). Both come from one drawing, [`icons/design.py`](icons/design.py). The font puts each icon on a private-use code point, so your terminal draws it as text and colours it like text.
+
+Three icon sets, chosen with `"icons"`:
+
+| Set | Looks like | Needs |
+| --- | --- | --- |
+| `custom` | The icons above, each in its own colour | The icon font installed, see below |
+| `emoji` | Emoji. This is the default | Nothing |
+| `plain` | Text labels (`session`, `open`, `today`), no icons | Nothing |
+
+### Install the icon font
+
+```
+python install.py --font
+```
+
+That copies the font into your user fonts (no admin rights), sets `"icons": "custom"` in your config, and prints the terminal step. Restart your terminal afterwards. If the icons show as empty boxes, add the font to your terminal's font list as a fallback:
+
+- **Windows Terminal:** in `settings.json`, `"font": { "face": "Cascadia Mono, Claude HUD Icons" }` (a comma-separated list is a fallback list)
+- **VS Code:** `"terminal.integrated.fontFamily": "'Cascadia Mono', 'Claude HUD Icons'"`
+- **Other terminals:** use whatever your terminal calls a fallback or symbols font. The font only contains the 14 icons, so it never replaces your main font.
+
+Each icon is followed by a space in the HUD, because the glyphs are a little wider than one terminal cell.
+
+To remove it, delete `ClaudeHudIcons.ttf` from your user fonts folder and set `"icons": "emoji"`.
 
 ## Install
 
@@ -44,6 +80,7 @@ The installer copies `hud.py` into `~/.claude/hud/`, writes a starter `~/.claude
 Options:
 
 - `--backfill` reads this month's existing transcripts once, so `month` starts out right instead of at zero
+- `--font` installs the icon font for your user and switches to the `custom` icon set
 - `--config-dir PATH` for a non-default config folder (it also honours `CLAUDE_CONFIG_DIR`)
 - `--python python3` if `python` on your PATH is not the one you want
 - `--refresh 15` seconds between refreshes
@@ -73,8 +110,9 @@ Edit `~/.claude/hud.config.json`. Every key is optional. Set `CLAUDE_HUD_CONFIG`
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `icons` | `"emoji"` | `"emoji"` or `"plain"` (text labels, no emoji) |
-| `line1`, `line2`, `line3` | see above | Segment names in order. Put what matters most first |
+| `icons` | `"emoji"` | `"custom"` (needs the icon font), `"emoji"` or `"plain"` |
+| `layout` | `"rows"` | `"rows"` is three rows. `"compact"` is two, with the folder on row 1 and the brain file on row 3 |
+| `line1`, `line2`, `line3` | from the layout | Segment names in order. A list here replaces that row. Put what matters most first |
 | `max_width` | `100` | A segment that would push a line past this width is skipped. Later segments go first, so raise it if `month` disappears |
 | `brain_path` | `null` | Folder to track, e.g. `"~/brain"`. Turns on the `brain` segment |
 | `brain_max_len` | `44` | Longest brain label. Long paths keep the top folder and the file name |
@@ -87,17 +125,19 @@ Edit `~/.claude/hud.config.json`. Every key is optional. Set `CLAUDE_HUD_CONFIG`
 | `idle_cap_minutes` | `10` | Longest gap that counts as active time |
 | `git` | `true` | Set `false` to skip the git call |
 | `colors` | | xterm 256 codes for `ok`, `warn`, `bad`, `dim`, `add`, `del` |
+| `icon_colors` | | xterm 256 codes for the `custom` icons: `model`, `time`, `cost`, `folder`, `branch`, `brain`, `context`, `cache_warm`, `cache_cold`, `dim` |
 | `thresholds` | `60`, `85` | Percent where bars go orange and red |
 
 `NO_COLOR=1` turns colour off.
 
-Example, a compact HUD with cost and no emoji:
+Example, a compact HUD with cost, no icons, and only two rows:
 
 ```json
 {
   "icons": "plain",
   "line1": ["model", "cost", "session", "where"],
-  "line2": ["context", "five_hour", "cache"]
+  "line2": ["context", "five_hour", "cache"],
+  "line3": []
 }
 ```
 
@@ -121,9 +161,10 @@ Nothing leaves your machine. The HUD makes no network calls. It reads the JSON C
 
 - **Nothing shows.** Run `python hud.py --demo`. If that works, check the `command` path in `settings.json`. Set `CLAUDE_HUD_DEBUG=1` in the environment to see errors instead of a bare model name.
 - **Line wraps in a narrow pane.** Lower `max_width`, or remove segments from `line1`.
-- **A segment is missing.** It did not fit in `max_width`. Raise it, or move that segment to `line3`.
-- **No brain line.** Set `brain_path` and use a file in it. Only the last 4 MB of transcript is scanned, so a brain file touched long ago drops off.
-- **Emoji look misaligned.** Set `"icons": "plain"`.
+- **A segment is missing.** It did not fit in `max_width`. Raise it, or move that segment to another row.
+- **No brain segment.** Set `brain_path` and use a file in it. Only the last 4 MB of transcript is scanned, so a brain file touched long ago drops off.
+- **Icons show as empty boxes.** The terminal is not using the icon font. See "Install the icon font", or set `"icons": "emoji"`.
+- **Emoji look misaligned.** Set `"icons": "plain"` or install the icon font.
 - **No `cache` segment.** It needs Claude Code 2.1.251 or newer.
 - **`today` and `month` start at zero.** Run `python hud.py --backfill`, or reinstall with `--backfill`.
 - **Windows: `python` not found.** Reinstall with `--python py` or the full path to your interpreter.
@@ -134,6 +175,15 @@ Nothing leaves your machine. The HUD makes no network calls. It reads the JSON C
 python -m unittest discover -s tests -v
 python scripts/render_preview.py     # rebuilds assets/preview.svg from real output
 ```
+
+To change an icon, edit its drawing in `icons/design.py`, then rebuild the SVGs and the font. This needs `pip install fonttools shapely`, which nothing else does:
+
+```
+python scripts/build_icons.py
+python scripts/render_preview.py
+```
+
+If you add an icon, also add its code point to `GLYPHS` in `hud.py`. A test fails until the two match.
 
 ## License
 

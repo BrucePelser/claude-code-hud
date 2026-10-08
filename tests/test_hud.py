@@ -11,7 +11,7 @@ import hud  # noqa: E402
 
 
 def make_cfg(**over):
-    cfg = hud._merge(hud.DEFAULTS, over)
+    cfg = hud.make_config(over)
     cfg["color"] = over.get("color", False)
     return cfg
 
@@ -123,15 +123,51 @@ class ActiveTimeTests(unittest.TestCase):
 
 
 class RenderTests(unittest.TestCase):
-    def test_demo_renders_two_lines_with_expected_pieces(self):
+    def test_demo_renders_three_themed_rows(self):
         out = hud.render(hud.demo_data(), make_cfg(), hud.DEMO_STATE)
         lines = out.split("\n")
-        self.assertEqual(len(lines), 2)
+        self.assertEqual(len(lines), 3)
         self.assertIn("Sonnet 5.5", lines[0])
-        self.assertIn("main*", lines[0])
+        self.assertIn("3h40m", lines[0])
         self.assertIn("ctx", lines[1])
         self.assertIn("5h", lines[1])
         self.assertIn("cache 54m", lines[1])
+        self.assertIn("my-app", lines[2])
+        self.assertIn("main*", lines[2])
+
+    def test_compact_layout_is_two_rows(self):
+        lines = hud.render(hud.demo_data(), make_cfg(layout="compact"), hud.DEMO_STATE).split("\n")
+        self.assertEqual(len(lines), 2)
+        self.assertIn("main*", lines[0])
+
+    def test_explicit_lines_beat_the_layout(self):
+        cfg = make_cfg(line1=["model"], line2=["cache"], line3=[])
+        lines = hud.render(hud.demo_data(), cfg, hud.DEMO_STATE).split("\n")
+        self.assertEqual(len(lines), 2)
+        self.assertNotIn("my-app", "\n".join(lines))
+
+    def test_custom_icons_use_the_font_glyphs_and_no_emoji(self):
+        out = hud.render(hud.demo_data(), make_cfg(icons="custom"), hud.DEMO_STATE)
+        for glyph in ("model", "active", "open", "today", "month", "folder", "branch", "context", "cache_warm", "reset"):
+            self.assertIn(hud.GLYPHS[glyph], out)
+        self.assertNotIn("\U0001f550", out)
+        self.assertNotIn("open ", out)
+
+    def test_custom_cache_is_a_snowflake_when_cold(self):
+        data = hud.demo_data()
+        data["prompt_cache"] = {"warm": False, "caching_observed": True, "expires_at": None}
+        out = hud.render(data, make_cfg(icons="custom"), hud.DEMO_STATE)
+        self.assertIn(hud.GLYPHS["cache_cold"], out)
+        self.assertIn("cold", out)
+        self.assertNotIn(hud.GLYPHS["cache_warm"], out)
+
+    def test_custom_icons_take_their_own_colours(self):
+        out = hud.render(hud.demo_data(), make_cfg(icons="custom", color=True), hud.DEMO_STATE)
+        self.assertIn("\x1b[38;5;80m" + hud.GLYPHS["active"], out)
+
+    def test_glyph_table_matches_the_icon_font_source(self):
+        from icons import design
+        self.assertEqual({k: chr(v) for k, v in design.CODEPOINTS.items()}, hud.GLYPHS)
 
     def test_no_color_has_no_escape_codes(self):
         out = hud.render(hud.demo_data(), make_cfg(color=False), hud.DEMO_STATE)
@@ -171,11 +207,11 @@ class RenderTests(unittest.TestCase):
         self.assertIn("/compact?", out)
 
     def test_elapsed_shows_open_time_and_hides_without_data(self):
-        out = hud.render(hud.demo_data(), make_cfg(), hud.DEMO_STATE)
-        self.assertIn("open 2h10m", out)
+        self.assertIn("\U0001f550 2h10m", hud.render(hud.demo_data(), make_cfg(), hud.DEMO_STATE))
+        self.assertIn("open 2h10m", hud.render(hud.demo_data(), make_cfg(icons="plain"), hud.DEMO_STATE))
         data = hud.demo_data()
         del data["cost"]["total_duration_ms"]
-        self.assertNotIn("open", hud.render(data, make_cfg(), hud.DEMO_STATE))
+        self.assertNotIn("2h10m", hud.render(data, make_cfg(), hud.DEMO_STATE))
 
     def test_unknown_segment_names_are_ignored(self):
         out = hud.render(hud.demo_data(), make_cfg(line1=["nope", "model"], line2=[]), hud.DEMO_STATE)

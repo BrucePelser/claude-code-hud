@@ -42,12 +42,45 @@ def save_settings(path, settings):
     path.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
 
 
+def install_font():
+    """Copy the icon font into the current user's fonts. Returns the installed path."""
+    src = HERE / "fonts" / "ClaudeHudIcons.ttf"
+    if sys.platform == "win32":
+        dest_dir = Path(os.environ["LOCALAPPDATA"]) / "Microsoft" / "Windows" / "Fonts"
+    elif sys.platform == "darwin":
+        dest_dir = Path.home() / "Library" / "Fonts"
+    else:
+        dest_dir = Path.home() / ".local" / "share" / "fonts"
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    dest = dest_dir / src.name
+    shutil.copy2(src, dest)
+    if sys.platform == "win32":
+        import winreg  # per-user fonts need a registry entry that points at the file
+        key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows NT\CurrentVersion\Fonts")
+        winreg.SetValueEx(key, "Claude HUD Icons (TrueType)", 0, winreg.REG_SZ, str(dest))
+        winreg.CloseKey(key)
+    elif sys.platform != "darwin":
+        subprocess.run(["fc-cache", "-f", str(dest_dir)], check=False)
+    return dest
+
+
+def set_icons_custom(config_path):
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        config = {}
+    config["icons"] = "custom"
+    config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+
+
 def main():
     ap = argparse.ArgumentParser(description="Install claude-code-hud.")
     ap.add_argument("--config-dir", help="Claude Code config dir (default: $CLAUDE_CONFIG_DIR or ~/.claude)")
     ap.add_argument("--python", help="python command to put in settings (default: python on Windows, python3 elsewhere)")
     ap.add_argument("--refresh", type=int, default=15, help="refreshInterval in seconds (default 15)")
     ap.add_argument("--backfill", action="store_true", help="count this month's existing transcripts")
+    ap.add_argument("--font", action="store_true",
+                    help='install the icon font for your user and set "icons": "custom"')
     ap.add_argument("--force", action="store_true", help="replace a statusLine that is not this HUD")
     ap.add_argument("--uninstall", action="store_true", help="remove the statusLine entry")
     args = ap.parse_args()
@@ -89,6 +122,13 @@ def main():
 
     print("Installed %s" % dest)
     print("Config:    %s" % config_target)
+    if args.font:
+        font_path = install_font()
+        set_icons_custom(config_target)
+        print("Font:      %s" % font_path)
+        print("Next: restart your terminal, then add 'Claude HUD Icons' to its font list if icons show as boxes.")
+        print("      Windows Terminal: \"font\": {\"face\": \"Cascadia Mono, Claude HUD Icons\"}")
+        print("      VS Code: \"terminal.integrated.fontFamily\": \"'Cascadia Mono', 'Claude HUD Icons'\"")
     if args.backfill:
         subprocess.run([sys.executable, str(dest), "--backfill"],
                        env=dict(os.environ, CLAUDE_CONFIG_DIR=str(cfg_dir)), check=False)
